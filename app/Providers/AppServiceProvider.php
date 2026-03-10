@@ -18,7 +18,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // 🛠️ Development Shim for NativePHP Mobile
         // Prevents "Undefined function nativephp_call" when running on Windows/Desktop
-        if (! function_exists('nativephp_call')) {
+        if (! function_exists('App\Providers\nativephp_call')) {
             function nativephp_call($method, $params) {
                 \Illuminate\Support\Facades\Log::info("Native call (Shim): {$method}", json_decode($params, true));
                 return json_encode(['status' => 'success']);

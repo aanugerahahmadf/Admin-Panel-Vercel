@@ -30048,6 +30048,13 @@ namespace Filament\Pages\Auth\PasswordReset {
             }
     }
 
+namespace App\Filament\Pages {
+    /**
+     */
+    class Dashboard extends \Filament\Pages\Dashboard {
+            }
+    }
+
 namespace App\Filament\Widgets {
     /**
      */
