@@ -15,8 +15,6 @@ use Illuminate\Validation\Rules\Password as PasswordRule;
 
 class OtpResetPassword extends BaseResetPassword
 {
-    public $otp = '';
-
     public function mount(?string $email = null, ?string $token = null): void
     {
         if (Filament::auth()->check()) {
@@ -30,7 +28,6 @@ class OtpResetPassword extends BaseResetPassword
             'email' => $this->email,
         ]);
         
-        // Filament expects a token, so we just supply a dummy one to satisfy constraints
         $this->token = 'otp';
     }
 
@@ -38,17 +35,25 @@ class OtpResetPassword extends BaseResetPassword
     {
         $data = $this->form->getState();
         $email = $data['email'] ?? $this->email;
-        $otp = $data['otp'];
 
-        $cachedOtp = Cache::get('password_reset_otp_' . $email);
+        // Cek apakah OTP sudah diverifikasi di halaman sebelumnya
+        if (!Cache::get('otp_verified_for_' . $email)) {
+            Notification::make()
+                ->title(__('Sesi verifikasi habis. Silakan verifikasi ulang OTP Anda.'))
+                ->danger()
+                ->send();
+            
+            $this->redirect(route('filament.admin.auth.verify-otp', ['email' => $email]));
+            return null;
+        }
 
-        if ($cachedOtp && (string) $cachedOtp === (string) $otp) {
-            $user = User::where('email', $email)->first();
-            if ($user) {
-                $user->password = Hash::make($data['password']);
-                $user->save();
-            }
+        $user = User::where('email', $email)->first();
+        
+        if ($user) {
+            $user->password = Hash::make($data['password']);
+            $user->save();
 
+            Cache::forget('otp_verified_for_' . $email);
             Cache::forget('password_reset_otp_' . $email);
 
             Notification::make()
@@ -60,10 +65,9 @@ class OtpResetPassword extends BaseResetPassword
             return null;
         } else {
             Notification::make()
-                ->title(__('Kode OTP tidak valid atau telah kadaluarsa.'))
+                ->title(__('Pengguna tidak ditemukan.'))
                 ->danger()
                 ->send();
-            
             return null;
         }
     }
@@ -73,27 +77,15 @@ class OtpResetPassword extends BaseResetPassword
         return $form
             ->schema([
                 $this->getEmailFormComponent(),
-                $this->getOtpFormComponent(),
                 $this->getPasswordFormComponent(),
                 $this->getPasswordConfirmationFormComponent(),
             ]);
     }
-
-    protected function getOtpFormComponent(): Component
-    {
-        return TextInput::make('otp')
-            ->label(__('6 Digit Kode OTP'))
-            ->required()
-            ->length(6)
-            ->numeric()
-            ->autofocus();
-    }
     
     protected function getEmailFormComponent(): Component
     {
-        // Override to remove autofocus
         $field = parent::getEmailFormComponent();
-        $field->autofocus(false);
+        $field->disabled()->dehydrated();
         return $field;
     }
 }
