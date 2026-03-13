@@ -16,6 +16,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         channels: __DIR__.'/../routes/channels.php',
+        apiPrefix: 'api/v1',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
@@ -30,6 +31,8 @@ $app = Application::configure(basePath: dirname(__DIR__))
         $middleware->web(replace: [
             ValidateCsrfToken::class => VerifyCsrfToken::class,
         ]);
+
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

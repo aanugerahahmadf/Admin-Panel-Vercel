@@ -1,4 +1,29 @@
-
-
-# Credential files (keystores, private keys, etc.)
-/credentials/
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/framework/cache/data/*
+!/storage/framework/cache/data/.gitignore
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitignore
+/storage/framework/testing/*
+!/storage/framework/testing/.gitignore
+/storage/framework/views/*
+!/storage/framework/views/.gitignore
+/storage/logs/*
+!/storage/logs/.gitignore
+/vendor
+.env
+.env.backup
+.env.production
+.phpunit.result.cache
+docker-compose.override.yml
+user.ini
+/.vercel
+/.vercel_build_output
+/auth.json
+# Vercel specific
+.vercelignore
+# Allow pre-built assets if we choose that route later
+# !/public/build
