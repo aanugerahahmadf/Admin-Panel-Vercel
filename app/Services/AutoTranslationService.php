@@ -76,8 +76,14 @@ class AutoTranslationService
      */
     public function translate(string $text, string $targetLocale): string
     {
-        if (empty(trim($text))) {
+        if (empty(trim($text)) || is_numeric($text)) {
             return $text;
+        }
+
+        // Jika target adalah bahasa Indonesia, dan teks kemungkinan besar sudah Indonesia atau Fallback, skip
+        if ($targetLocale === 'id' && (preg_match('/[a-z]/i', $text) || preg_match('/[0-9]/', $text))) {
+             // Opsional: kita bisa tambahkan deteksi bahasa lebih lanjut di sini
+             // Tapi untuk performa 'Sinkron', kita asumsikan ID adalah default
         }
 
         $sourceHash = md5($text);

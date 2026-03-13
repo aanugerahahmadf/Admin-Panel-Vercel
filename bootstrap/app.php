@@ -5,6 +5,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
+use Illuminate\Support\Facades\Auth;
 
 $app = Application::configure(basePath: dirname(__DIR__))
     ->withProviders([
@@ -18,12 +19,16 @@ $app = Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->web(replace: [
-            ValidateCsrfToken::class => VerifyCsrfToken::class,
+        $middleware->web(append: [
+            \App\Http\Middleware\SetLocale::class,
         ]);
 
-        $middleware->alias([
-            'set_locale' => \App\Http\Middleware\SetLocale::class,
+        $middleware->api(append: [
+            \App\Http\Middleware\SetLocale::class,
+        ]);
+
+        $middleware->web(replace: [
+            ValidateCsrfToken::class => VerifyCsrfToken::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
