@@ -26,13 +26,18 @@ class OtpRequestPasswordReset extends BaseRequestPasswordReset
             $otp = random_int(100000, 999999);
             Cache::put('password_reset_otp_' . $email, $otp, now()->addMinutes(15));
 
-            Mail::send('emails.otp', [
-                'title' => 'Atur Ulang Kata Sandi',
-                'description' => 'Kami menerima permintaan untuk mengatur ulang kata sandi Anda. Silakan gunakan kode verifikasi di bawah ini untuk melanjutkan. Kode ini berlaku selama 15 menit.',
-                'otp' => $otp,
-            ], function ($message) use ($email) {
-                $message->to($email)->subject('Kode Atur Ulang Kata Sandi');
-            });
+            try {
+                Mail::send('emails.otp', [
+                    'title' => 'Atur Ulang Kata Sandi',
+                    'description' => 'Kami menerima permintaan untuk mengatur ulang kata sandi Anda. Silakan gunakan kode verifikasi di bawah ini untuk melanjutkan. Kode ini berlaku selama 15 menit.',
+                    'otp' => $otp,
+                ], function ($message) use ($email) {
+                    $message->to($email)->subject('Kode Atur Ulang Kata Sandi');
+                });
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Gagal kirim email OTP ke $email: " . $e->getMessage());
+                // Tetap lanjut biar user nggak stuck di error page, walau email gagal kirim
+            }
         }
 
         Notification::make()

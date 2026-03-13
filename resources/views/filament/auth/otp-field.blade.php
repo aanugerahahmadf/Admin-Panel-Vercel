@@ -2,10 +2,21 @@
     otp: $wire.entangle('{{ $getStatePath() }}'),
     length: 6,
     activeInput: 0,
+    handlePaste(e) {
+        e.preventDefault();
+        const text = e.clipboardData.getData('text');
+        const digits = text.split('').filter(c => /\d/.test(c)).slice(0, this.length);
+        
+        if (digits.length > 0) {
+            this.otp = digits.join('');
+            this.activeInput = Math.min(digits.length, this.length - 1);
+            this.updateBoxes();
+        }
+    },
     handleInput(e, index) {
         const value = e.target.value;
+        // If user typing fast or mobile keyboard behavior
         if (value.length > 1) {
-            // Handle paste or fast typing
             const digits = value.split('').filter(c => /\d/.test(c)).slice(0, this.length);
             this.otp = digits.join('');
             this.activeInput = Math.min(digits.length, this.length - 1);
@@ -50,10 +61,11 @@
             type="text"
             maxlength="1"
             inputmode="numeric"
+            @paste="handlePaste($event)"
             @input="handleInput($event, {{ $i }})"
             @keydown="handleKeydown($event, {{ $i }})"
             @focus="activeInput = {{ $i }}"
-            class="w-12 h-14 text-center text-2xl font-bold border-2 rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:border-primary-600 focus:ring-primary-600 dark:focus:border-primary-500 transition-all duration-200 uppercase"
+            class="w-10 h-12 text-center text-xl font-bold border-2 rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:border-primary-600 focus:ring-primary-600 dark:focus:border-primary-500 transition-all duration-200 uppercase"
         />
     @endfor
 </div>

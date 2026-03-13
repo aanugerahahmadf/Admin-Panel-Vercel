@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 
 class VerifyOtp extends \Filament\Pages\SimplePage
 {
-    use InteractsWithFormActions;
+    use \Filament\Pages\Concerns\InteractsWithFormActions;
     protected static string $view = 'filament.auth.verify-otp';
     protected static string $layout = 'filament-panels::components.layout.simple';
 
@@ -110,6 +110,11 @@ class VerifyOtp extends \Filament\Pages\SimplePage
         return \Filament\Actions\Action::make('verify')
             ->label(__('Verifikasi Kode'))
             ->submit('verify');
+    }
+
+    protected function hasFullWidthFormActions(): bool
+    {
+        return false;
     }
 
     public static function registerRoutes(\Filament\Panel $panel): void

@@ -16,9 +16,10 @@ use Filament\Pages\Concerns\InteractsWithFormActions;
 use Illuminate\Contracts\Support\Htmlable;
 use App\Models\User;
 
-class OtpEmailVerificationPrompt extends BasePrompt
+class OtpEmailVerificationPrompt extends \Filament\Pages\Auth\EmailVerification\EmailVerificationPrompt
 {
-    use InteractsWithFormActions;
+    use \Filament\Pages\Concerns\InteractsWithFormActions;
+
     protected static string $view = 'filament.pages.auth.otp-email-verification-prompt';
 
     public ?array $data = [];
@@ -49,13 +50,17 @@ class OtpEmailVerificationPrompt extends BasePrompt
         $otp = random_int(100000, 999999);
         Cache::put('otp_' . $user->id, $otp, now()->addMinutes(15));
 
-        Mail::send('emails.otp', [
-            'title' => 'Verifikasi Email',
-            'description' => 'Kami menerima permintaan untuk memverifikasi alamat email Anda. Silakan gunakan kode berikut untuk menyelesaikan proses verifikasi. Kode ini berlaku selama 15 menit.',
-            'otp' => $otp,
-        ], function ($message) use ($user) {
-            $message->to($user->email)->subject('Kode Verifikasi Email');
-        });
+        try {
+            Mail::send('emails.otp', [
+                'title' => 'Verifikasi Email',
+                'description' => 'Kami menerima permintaan untuk memverifikasi alamat email Anda. Silakan gunakan kode berikut untuk menyelesaikan proses verifikasi. Kode ini berlaku selama 15 menit.',
+                'otp' => $otp,
+            ], function ($message) use ($user) {
+                $message->to($user->email)->subject('Kode Verifikasi Email');
+            });
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Gagal kirim email verifikasi ke {$user->email}: " . $e->getMessage());
+        }
     }
 
     public function verify(): void
@@ -105,11 +110,11 @@ class OtpEmailVerificationPrompt extends BasePrompt
 
     protected function hasFullWidthFormActions(): bool
     {
-        return true;
+        return false;
     }
 
     public function getHeading(): string|Htmlable
     {
-        return "Verifikasi Email Anda";
+        return __("Verifikasi Email Anda");
     }
 }
