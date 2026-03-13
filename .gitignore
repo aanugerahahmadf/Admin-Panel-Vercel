@@ -1,18 +1,7 @@
 /node_modules
 /public/build
 /public/hot
-/public/storage
 /storage/*.key
-/storage/framework/cache/data/*
-!/storage/framework/cache/data/.gitignore
-/storage/framework/sessions/*
-!/storage/framework/sessions/.gitignore
-/storage/framework/testing/*
-!/storage/framework/testing/.gitignore
-/storage/framework/views/*
-!/storage/framework/views/.gitignore
-/storage/logs/*
-!/storage/logs/.gitignore
 /vendor
 .env
 .env.backup
@@ -24,3 +13,17 @@ user.ini
 /.vercel_build_output
 /auth.json
 .vercelignore
+
+# Allow storage structure
+/storage/framework/cache/data/*
+!/storage/framework/cache/data/.gitkeep
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitkeep
+/storage/framework/testing/*
+!/storage/framework/testing/.gitkeep
+/storage/framework/views/*
+!/storage/framework/views/.gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
+/bootstrap/cache/*
+!/bootstrap/cache/.gitkeep
