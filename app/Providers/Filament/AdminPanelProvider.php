@@ -45,7 +45,7 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login(\App\Filament\Pages\Auth\Login::class)
             ->passwordReset(\App\Filament\Pages\Auth\OtpRequestPasswordReset::class)
-            ->email_verification(\App\Filament\Pages\Auth\OtpEmailVerificationPrompt::class)
+            ->emailVerification(\App\Filament\Pages\Auth\OtpEmailVerificationPrompt::class)
             ->sidebarFullyCollapsibleOnDesktop()
             ->brandName(config('app.name'))
             ->simplePageMaxContentWidth(MaxWidth::Small)
