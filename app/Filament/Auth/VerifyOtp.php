@@ -9,8 +9,8 @@ use Filament\Facades\Filament;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Form;
+use Filament\Forms\Components\ViewField;
 use Filament\Pages\Concerns\InteractsWithFormActions;
-
 use Illuminate\Support\Facades\Route;
 
 class VerifyOtp extends \Filament\Pages\SimplePage
@@ -81,12 +81,10 @@ class VerifyOtp extends \Filament\Pages\SimplePage
                     ->label(__('Email address'))
                     ->disabled()
                     ->dehydrated(),
-                TextInput::make('otp')
+                ViewField::make('otp')
                     ->label(__('6 Digit Kode OTP'))
-                    ->required()
-                    ->length(6)
-                    ->numeric()
-                    ->autofocus(),
+                    ->view('filament.auth.otp-field')
+                    ->required(),
             ]);
     }
 

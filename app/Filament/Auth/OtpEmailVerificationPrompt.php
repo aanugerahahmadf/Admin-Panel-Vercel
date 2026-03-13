@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 use Filament\Notifications\Notification;
 use Filament\Actions\Action;
+use Filament\Forms\Components\ViewField;
 use Filament\Pages\Concerns\InteractsWithFormActions;
 use Illuminate\Contracts\Support\Htmlable;
 use App\Models\User;
@@ -85,13 +86,10 @@ class OtpEmailVerificationPrompt extends BasePrompt
     {
         return $form
             ->schema([
-                TextInput::make('otp')
+                ViewField::make('otp')
                     ->label(__('Kode Verifikasi'))
-                    ->placeholder(__('Masukkan 6 digit kode'))
-                    ->required()
-                    ->length(6)
-                    ->numeric()
-                    ->autofocus(),
+                    ->view('filament.auth.otp-field')
+                    ->required(),
             ])
             ->statePath('data');
     }
