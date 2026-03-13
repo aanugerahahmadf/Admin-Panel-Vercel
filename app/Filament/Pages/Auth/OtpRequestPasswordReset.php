@@ -5,8 +5,12 @@ namespace App\Filament\Pages\Auth;
 use Filament\Pages\Auth\PasswordReset\RequestPasswordReset as BaseRequestPasswordReset;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
+use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use App\Models\User;
+use Filament\Forms\Form;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Component;
 
 class OtpRequestPasswordReset extends BaseRequestPasswordReset
 {
@@ -36,6 +40,20 @@ class OtpRequestPasswordReset extends BaseRequestPasswordReset
             ->success()
             ->send();
 
-        $this->redirect(OtpResetPassword::getUrl() . '?email=' . urlencode($email));
+        // Use a standard non-signed route first to see if 403 goes away with our middleware fix
+        // Actually, we fixed trustProxies, so standard route should be fine.
+        $this->redirect(Filament::getCurrentPanel()->route('auth.password-reset.reset', [
+            'email' => $email,
+        ]));
+    }
+
+    protected function getEmailFormComponent(): Component
+    {
+        return TextInput::make('email')
+            ->label(__('Email address'))
+            ->email()
+            ->required()
+            ->autocomplete()
+            ->autofocus();
     }
 }
