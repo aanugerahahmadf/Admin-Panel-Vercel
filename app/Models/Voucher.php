@@ -3,18 +3,19 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
  * @property string $code
  * @property string|null $description
- * @property numeric $discount_amount
+ * @property float $discount_amount
  * @property string $discount_type
- * @property numeric $min_purchase
- * @property \Illuminate\Support\Carbon|null $expires_at
+ * @property float $min_purchase
+ * @property Carbon|null $expires_at
  * @property bool $is_active
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Voucher newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Voucher newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Voucher query()
@@ -26,8 +27,20 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Voucher whereExpiresAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Voucher whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Voucher whereIsActive($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Voucher whereMinPurchase($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Voucher whereUpdatedAt($value)
+ * @method static \App\Models\Voucher|null find(mixed $id, array|string $columns = ['*'])
+ * @method static \App\Models\Voucher findOrFail(mixed $id, array|string $columns = ['*'])
+ * @method static \App\Models\Voucher|null first(array|string $columns = ['*'])
+ * @method static \App\Models\Voucher firstOrFail(array|string $columns = ['*'])
+ * @method static \Illuminate\Database\Eloquent\Collection<int, \App\Models\Voucher> get(array|string $columns = ['*'])
+ * @property numeric $discountAmount
+ * @property string $discountType
+ * @property numeric $minPurchase
+ * @property \Illuminate\Support\Carbon|null $expiresAt
+ * @property bool $isActive
+ * @property \Illuminate\Support\Carbon|null $createdAt
+ * @property \Illuminate\Support\Carbon|null $updatedAt
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|\App\Models\Voucher whereMinPurchase($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|\App\Models\Voucher whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class Voucher extends Model

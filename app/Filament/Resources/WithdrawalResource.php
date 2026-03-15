@@ -6,11 +6,19 @@ use App\Filament\Resources\WithdrawalResource\Pages;
 use App\Models\Withdrawal;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Support\Str; // Added for Str::random
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
 
+// Added for Str::random
+
+/**
+ * @mixin \Eloquent
+ * @property-read \App\Models\Withdrawal $record
+ */
 class WithdrawalResource extends Resource
 {
     protected static ?string $model = Withdrawal::class;
@@ -19,8 +27,16 @@ class WithdrawalResource extends Resource
 
     protected static ?int $navigationSort = 4;
 
-    
-    
+    public static function getModelLabel(): string
+    {
+        return __('Penarikan Saldo');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Penarikan Saldo');
+    }
+
     public static function getNavigationGroup(): ?string
     {
         return __('Transaksi');
@@ -33,7 +49,10 @@ class WithdrawalResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::$model::count();
+        /** @var Builder $query */
+        $query = static::$model::query();
+
+        return (string) $query->count();
     }
 
     public static function getNavigationBadgeColor(): ?string
@@ -54,7 +73,7 @@ class WithdrawalResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('user_id')
                             ->label(__('Pengguna'))
-                            ->relationship('user', 'name')
+                            ->relationship('user', 'full_name')
                             ->searchable()
                             ->preload()
                             ->required(),
@@ -79,7 +98,7 @@ class WithdrawalResource extends Resource
                             ])
                             ->required()
                             ->default('pending'),
-                    ])->columns(2),
+                    ])->columns(['sm' => 2]),
 
                 Forms\Components\Section::make(__('Tujuan Transfer'))
                     ->schema([
@@ -92,7 +111,7 @@ class WithdrawalResource extends Resource
                         Forms\Components\TextInput::make('account_holder')
                             ->label(__('Nama Pemilik Rekening'))
                             ->required(),
-                    ])->columns(3),
+                    ])->columns(['sm' => 3]),
 
                 Forms\Components\Section::make(__('Catatan'))
                     ->schema([
@@ -101,7 +120,7 @@ class WithdrawalResource extends Resource
                             ->readOnly(),
                         Forms\Components\Textarea::make('admin_notes')
                             ->label(__('Catatan Admin')),
-                    ])->columns(2),
+                    ])->columns(['sm' => 2]),
             ]);
     }
 
@@ -109,7 +128,7 @@ class WithdrawalResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('user.name')
+                Tables\Columns\TextColumn::make('user.full_name')
                     ->label(__('Pelanggan'))
                     ->sortable()
                     ->searchable(),
@@ -204,7 +223,7 @@ class WithdrawalResource extends Resource
                     ->color('warning')
                     ->size('lg')
                     ->successNotification(
-                        \Filament\Notifications\Notification::make()
+                        Notification::make()
                             ->success()
                             ->title(__('Penarikan diperbarui'))
                             ->body(__('Penarikan telah berhasil diperbarui.'))
@@ -214,7 +233,7 @@ class WithdrawalResource extends Resource
                     ->color('danger')
                     ->size('lg')
                     ->successNotification(
-                        \Filament\Notifications\Notification::make()
+                        Notification::make()
                             ->success()
                             ->title(__('Penarikan dihapus'))
                             ->body(__('Penarikan telah berhasil dihapus.'))

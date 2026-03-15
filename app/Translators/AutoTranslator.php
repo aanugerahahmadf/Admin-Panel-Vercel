@@ -16,8 +16,12 @@ class AutoTranslator extends Translator
 
     /**
      * Override get() — jika terjemahan tidak ditemukan, otomatis terjemahkan.
+     *
+     * @param  string  $key
+     * @param  string|null  $locale
+     * @param  bool  $fallback
      */
-    public function get($key, array $replace = [], $locale = null, $fallback = true)
+    public function get($key, array $replace = [], $locale = null, $fallback = true): string|array|null
     {
         $result = parent::get($key, $replace, $locale, $fallback);
 
@@ -29,13 +33,15 @@ class AutoTranslator extends Translator
         /**
          * SKENARIO 1: Key tidak ditemukan di locale saat ini (result === key)
          */
-        if (is_string($result) && $result === $key && !empty(trim($key))) {
+        if (is_string($result) && $result === $key && ! empty(trim($key))) {
             $enValue = parent::get($key, [], 'en');
             $textToTranslate = ($enValue !== $key) ? $enValue : $key;
 
-            $translated = $this->autoService->translate($textToTranslate, $targetLocale);
-            if ($translated !== $textToTranslate) {
-                return $this->makeReplacements($translated, $replace);
+            if (is_string($textToTranslate)) {
+                $translated = $this->autoService->translate($textToTranslate, $targetLocale);
+                if ($translated !== $textToTranslate) {
+                    return $this->makeReplacements($translated, $replace);
+                }
             }
         }
 

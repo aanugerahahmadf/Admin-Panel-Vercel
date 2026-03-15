@@ -2,26 +2,31 @@
 
 namespace App\Livewire\Messages;
 
+use App\Filament\Pages\MessagesPage;
+use App\Livewire\Traits\CanMarkAsRead;
+use App\Livewire\Traits\CanValidateFiles;
+use App\Livewire\Traits\HasPollInterval;
+use App\Models\Inbox as InboxModel;
+use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Notifications\Notification;
 use Filament\Support\Enums\MaxWidth;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Auth;
-use App\Livewire\Traits\CanMarkAsRead;
-use App\Livewire\Traits\CanValidateFiles;
-use App\Livewire\Traits\HasPollInterval;
 use Livewire\Attributes\On;
 use Livewire\Component;
-use App\Models\User;
-use App\Models\Inbox as InboxModel;
-use App\Filament\Pages\MessagesPage;
 
+/**
+ * @mixin \Livewire\Component
+ */
 class Inbox extends Component implements HasActions, HasForms
 {
     use CanMarkAsRead, CanValidateFiles, HasPollInterval, InteractsWithActions, InteractsWithForms;
@@ -38,16 +43,20 @@ class Inbox extends Component implements HasActions, HasForms
 
     public function unreadCount(): int
     {
-        return InboxModel::whereJsonContains('user_ids', Auth::id())
-            ->whereHas('messages', function ($query) {
-                $query->whereJsonDoesntContain('read_by', Auth::id());
-            })->get()->count();
+        $userId = Auth::id();
+
+        /** @var Builder $query */
+        $query = InboxModel::whereJsonContains('user_ids', $userId, 'and', false);
+
+        return $query->whereHas('messages', function (Builder $q) use ($userId): void {
+            $q->whereJsonDoesntContain('read_by', $userId, 'and', false);
+        })->count();
     }
 
     #[On('refresh-inbox')]
     public function loadConversations(): void
     {
-        $this->conversations = Auth::user()->allConversations()->get();
+        $this->conversations = Auth::user()->allConversations()->get(['*']);
         $this->markAsRead();
     }
 
@@ -59,7 +68,7 @@ class Inbox extends Component implements HasActions, HasForms
             ->form([
                 Forms\Components\Select::make('user_ids')
                     ->label(__('Select User(s)'))
-                    ->options(fn () => User::all()->pluck('name', 'id'))
+                    ->options(fn () => User::query()->pluck('full_name', 'id')->toArray())
                     ->multiple()
                     ->preload(false)
                     ->searchable()
@@ -68,7 +77,7 @@ class Inbox extends Component implements HasActions, HasForms
                 Forms\Components\TextInput::make('title')
                     ->label(__('Group Name'))
                     ->visible(function (Forms\Get $get) {
-                        return collect($get('user_ids'))->count() > 1;
+                        return collect($get('user_ids') ?? [])->count() > 1;
                     }),
                 Forms\Components\Textarea::make('message')
                     ->placeholder(__('Write a message...'))
@@ -84,7 +93,7 @@ class Inbox extends Component implements HasActions, HasForms
 
                 /** @var InboxModel|null $inbox */
                 $inbox = InboxModel::query()
-                    ->whereJsonContains('user_ids', $userIds->toArray())
+                    ->whereJsonContains('user_ids', $userIds->toArray(), 'and', false)
                     ->whereRaw('JSON_LENGTH(user_ids) = ?', [$totalUserIds])
                     ->when($data['title'] ?? null, function ($query, $title) {
                         return $query->where('title', $title);
@@ -92,7 +101,7 @@ class Inbox extends Component implements HasActions, HasForms
                     ->when(! ($data['title'] ?? null), function ($query) {
                         return $query->whereNull('title');
                     })
-                    ->first();
+                    ->first(['*']);
 
                 $inboxId = null;
                 if (! $inbox) {
@@ -114,7 +123,7 @@ class Inbox extends Component implements HasActions, HasForms
                     'read_at' => [now()],
                     'notified' => [Auth::id()],
                 ]);
-                
+
                 return redirect()->to(MessagesPage::getUrl(['id' => $inboxId]));
             })->extraAttributes([
                 'class' => 'w-full',
@@ -124,12 +133,12 @@ class Inbox extends Component implements HasActions, HasForms
     public function deleteConversation(int $id)
     {
         /** @var InboxModel|null $inbox */
-        $inbox = InboxModel::find($id);
+        $inbox = InboxModel::find($id, ['*']);
 
         if ($inbox && in_array(Auth::id(), $inbox->user_ids)) {
             $inbox->delete();
 
-            \Filament\Notifications\Notification::make()
+            Notification::make()
                 ->title(__('Conversation deleted'))
                 ->success()
                 ->send();

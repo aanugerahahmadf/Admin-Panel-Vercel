@@ -13,12 +13,13 @@ use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
-
 use Livewire\Component;
 
+/**
+ * @mixin \Livewire\Component
+ */
 class PersonalInfoComponent extends Component implements HasForms
 {
-
     use InteractsWithForms;
 
     public ?array $data = [];

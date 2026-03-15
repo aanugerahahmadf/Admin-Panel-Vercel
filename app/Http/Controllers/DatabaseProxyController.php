@@ -28,19 +28,20 @@ class DatabaseProxyController extends Controller
         $secret = $request->header('X-DB-PROXY-SECRET');
         $validSecret = env('NATIVE_DB_PROXY_SECRET', 'nativephp-db-proxy-secret-2024');
 
-        if (!$secret || $secret !== $validSecret) {
-            Log::warning('[DB Proxy] Unauthorized access attempt from ' . $request->ip());
+        if (! $secret || $secret !== $validSecret) {
+            Log::warning('[DB Proxy] Unauthorized access attempt from '.$request->ip());
+
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
         // ── 2. VALIDATE INPUT ─────────────────────────────────────────────
-        $method   = $request->input('method');
-        $query    = $request->input('query');
+        $method = $request->input('method');
+        $query = $request->input('query');
         $bindings = $request->input('bindings', []);
 
         $allowedMethods = ['select', 'insert', 'update', 'delete', 'statement', 'selectOne'];
 
-        if (!in_array($method, $allowedMethods, true)) {
+        if (! in_array($method, $allowedMethods, true)) {
             return response()->json(['error' => "Unsupported method: {$method}"], 400);
         }
 
@@ -51,20 +52,20 @@ class DatabaseProxyController extends Controller
         // ── 3. EXECUTE ────────────────────────────────────────────────────
         try {
             $result = match ($method) {
-                'select'     => DB::select($query, $bindings),
-                'selectOne'  => DB::selectOne($query, $bindings),
-                'insert'     => DB::insert($query, $bindings),
-                'update'     => DB::update($query, $bindings),
-                'delete'     => DB::delete($query, $bindings),
-                'statement'  => DB::statement($query, $bindings),
+                'select' => DB::select($query, $bindings),
+                'selectOne' => DB::selectOne($query, $bindings),
+                'insert' => DB::insert($query, $bindings),
+                'update' => DB::update($query, $bindings),
+                'delete' => DB::delete($query, $bindings),
+                'statement' => DB::statement($query, $bindings),
             };
 
             return response()->json(['result' => $result]);
 
         } catch (\Throwable $e) {
-            Log::error('[DB Proxy] Query failed: ' . $e->getMessage(), [
-                'method'   => $method,
-                'query'    => $query,
+            Log::error('[DB Proxy] Query failed: '.$e->getMessage(), [
+                'method' => $method,
+                'query' => $query,
             ]);
 
             return response()->json([

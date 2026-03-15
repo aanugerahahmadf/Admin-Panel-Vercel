@@ -2,45 +2,48 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasFilamentMessages;
+use App\Traits\InteractsWithLanguages;
+use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
 use Filament\Models\Contracts\HasName;
 use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Notifications\DatabaseNotificationCollection;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Storage;
-use App\Models\Traits\HasFilamentMessages;
+use Illuminate\Support\Carbon;
 use Laravel\Sanctum\HasApiTokens;
+use Laravel\Sanctum\PersonalAccessToken;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
-use App\Models\Order;
-use App\Models\Wishlist;
-use App\Models\Package;
-use App\Models\Payment;
-use App\Models\PaymentMethod;
-use App\Models\Review;
 
 /**
  * @property int $id
  * @property string $full_name
  * @property string $email
- * @property numeric $balance
- * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property float $balance
+ * @property Carbon|null $email_verified_at
  * @property string $password
  * @property string|null $remember_token
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property string|null $first_name
  * @property string|null $last_name
  * @property string|null $username
  * @property string|null $avatar_url
  * @property string|null $phone
  * @property string|null $address
- * @property numeric|null $latitude
- * @property numeric|null $longitude
- * @property numeric|null $budget
- * @property \Illuminate\Support\Carbon|null $wedding_date
+ * @property float|null $latitude
+ * @property float|null $longitude
+ * @property float|null $budget
+ * @property Carbon|null $wedding_date
  * @property string|null $theme_preference
  * @property string|null $color_preference
  * @property string|null $event_concept
@@ -50,23 +53,25 @@ use App\Models\Review;
  * @property string $avatar
  * @property int $dark_mode
  * @property string|null $messenger_color
+ * @property-read UserLanguage|null $lang
  * @property-read mixed $name
- * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
+ * @property-read DatabaseNotificationCollection<int, DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Order> $orders
+ * @property-read Collection<int, Order> $orders
  * @property-read int|null $orders_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, PaymentMethod> $paymentMethods
+ * @property-read Collection<int, PaymentMethod> $paymentMethods
  * @property-read int|null $payment_methods_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Payment> $payments
+ * @property-read Collection<int, Payment> $payments
  * @property-read int|null $payments_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Permission\Models\Permission> $permissions
+ * @property-read Collection<int, Permission> $permissions
  * @property-read int|null $permissions_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Permission\Models\Role> $roles
+ * @property-read Collection<int, Role> $roles
  * @property-read int|null $roles_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \Laravel\Sanctum\PersonalAccessToken> $tokens
+ * @property-read Collection<int, PersonalAccessToken> $tokens
  * @property-read int|null $tokens_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Wishlist> $wishlists
+ * @property-read Collection<int, Wishlist> $wishlists
  * @property-read int|null $wishlists_count
+ * @method \Illuminate\Database\Eloquent\Builder allConversations()
  * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User newQuery()
@@ -103,17 +108,56 @@ use App\Models\Review;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereWeddingDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User withoutPermission($permissions)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User withoutRole($roles, ?string $guard = null)
+ * @method static \App\Models\User|null find(mixed $id, array|string $columns = ['*'])
+ * @method static \App\Models\User findOrFail(mixed $id, array|string $columns = ['*'])
+ * @method static \App\Models\User|null first(array|string $columns = ['*'])
+ * @method static \App\Models\User firstOrFail(array|string $columns = ['*'])
+ * @method static \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> get(array|string $columns = ['*'])
+ * @property string $fullName
+ * @property \Illuminate\Support\Carbon|null $emailVerifiedAt
+ * @property string|null $rememberToken
+ * @property \Illuminate\Support\Carbon|null $createdAt
+ * @property \Illuminate\Support\Carbon|null $updatedAt
+ * @property string|null $firstName
+ * @property string|null $lastName
+ * @property string|null $avatarUrl
+ * @property \Illuminate\Support\Carbon|null $weddingDate
+ * @property string|null $themePreference
+ * @property string|null $colorPreference
+ * @property string|null $eventConcept
+ * @property string|null $dreamVenue
+ * @property string|null $customFields
+ * @property bool $activeStatus
+ * @property int $darkMode
+ * @property string|null $messengerColor
+ * @property-read int|null $notificationsCount
+ * @property-read bool|null $notificationsExists
+ * @property-read int|null $ordersCount
+ * @property-read bool|null $ordersExists
+ * @property-read int|null $paymentMethodsCount
+ * @property-read bool|null $paymentMethodsExists
+ * @property-read int|null $paymentsCount
+ * @property-read bool|null $paymentsExists
+ * @property-read int|null $permissionsCount
+ * @property-read bool|null $permissionsExists
+ * @property-read int|null $rolesCount
+ * @property-read bool|null $rolesExists
+ * @property-read int|null $tokensCount
+ * @property-read bool|null $tokensExists
+ * @property-read int|null $wishlistsCount
+ * @property-read bool|null $wishlistsExists
  * @mixin \Eloquent
  */
 class User extends Authenticatable implements FilamentUser, HasAvatar, HasName, MustVerifyEmail
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+    /** @use HasFactory<UserFactory> */
     use HasApiTokens;
+
     use HasFactory;
     use HasFilamentMessages;
     use HasRoles;
+    use InteractsWithLanguages;
     use Notifiable;
-    use \App\Traits\InteractsWithLanguages;
 
     public function getFilamentName(): string
     {
@@ -212,22 +256,22 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName, 
     /**
      * Fallback accessor for packages that expect 'name' attribute.
      */
-    protected function name(): \Illuminate\Database\Eloquent\Casts\Attribute
+    protected function name(): Attribute
     {
-        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+        return Attribute::make(
             get: fn () => $this->full_name,
         );
     }
 
-    protected function avatarUrl(): \Illuminate\Database\Eloquent\Casts\Attribute
+    protected function avatarUrl(): Attribute
     {
-        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+        return Attribute::make(
             get: function ($value) {
                 // Determine the raw path (from avatar_url column or fallback to avatar column)
                 $path = $value ?: $this->avatar;
 
                 // Handle placeholders as null
-                if (!$path || in_array($path, ['avatar.png', 'default.png', 'placeholder.png'])) {
+                if (! $path || in_array($path, ['avatar.png', 'default.png', 'placeholder.png'])) {
                     return null;
                 }
 
@@ -238,11 +282,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName, 
 
                 // Use asset() helper to get a dynamic URL based on the current request host.
                 // This ensures the URL is correct for both web (127.0.0.1) and mobile emulator (10.0.2.2).
-                return asset('storage/' . ltrim($path, '/'));
+                return asset('storage/'.ltrim($path, '/'));
             }
         );
     }
-    
+
     public function payments()
     {
         return $this->hasMany(Payment::class);

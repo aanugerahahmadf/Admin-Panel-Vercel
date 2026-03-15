@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Review;
-use App\Models\Package;
 use App\Models\Order;
+use App\Models\Package;
+use App\Models\Review;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class ReviewController extends Controller
 {
@@ -30,9 +30,9 @@ class ReviewController extends Controller
             $order = Order::where('user_id', Auth::id())
                 ->where('package_id', $validatedData['package_id'])
                 ->where('status', 'completed')
-                ->first();
+                ->first(['*']);
 
-            if (!$order) {
+            if (! $order) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'You can only review packages you have ordered and completed',
@@ -42,7 +42,7 @@ class ReviewController extends Controller
             // Check if user has already reviewed this package
             $existingReview = Review::where('user_id', Auth::id())
                 ->where('package_id', $validatedData['package_id'])
-                ->first();
+                ->first(['*']);
 
             if ($existingReview) {
                 return response()->json([
@@ -208,7 +208,7 @@ class ReviewController extends Controller
         try {
             $review = Review::where('id', $id)
                 ->where('user_id', Auth::id())
-                ->firstOrFail();
+                ->firstOrFail(['*']);
 
             $validatedData = $request->validate([
                 'rating' => 'sometimes|required|integer|min:1|max:5',
@@ -217,7 +217,7 @@ class ReviewController extends Controller
             ]);
 
             $review->update($validatedData);
-            
+
             // Refresh the review with loaded relationships
             $review->load(['user:id,full_name,avatar_url', 'package:id,name']);
 
@@ -254,7 +254,7 @@ class ReviewController extends Controller
         try {
             $review = Review::where('id', $id)
                 ->where('user_id', Auth::id())
-                ->firstOrFail();
+                ->firstOrFail(['*']);
 
             $review->delete();
 

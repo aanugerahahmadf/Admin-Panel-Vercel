@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 
-Artisan::command('inspire', function (): void {
-    $this->comment(Inspiring::quote());
+Artisan::command('inspire', function () {
+    /** @var \Illuminate\Console\Command $this */
+    echo Inspiring::quote().PHP_EOL;
 })->purpose('Display an inspiring quote');

@@ -5,8 +5,12 @@ namespace App\Filament\Resources\WeddingOrganizerResource\Pages;
 use App\Filament\Exports\WeddingOrganizerExporter;
 use App\Filament\Resources\WeddingOrganizerResource;
 use Filament\Actions;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 
+/**
+ * @property-read \App\Filament\Resources\WeddingOrganizerResource $resource
+ */
 class ManageWeddingOrganizers extends ManageRecords
 {
     protected static string $resource = WeddingOrganizerResource::class;
@@ -23,7 +27,7 @@ class ManageWeddingOrganizers extends ManageRecords
                 ->label(__('Tambah Studio'))
                 ->icon('heroicon-o-plus')
                 ->successNotification(
-                    \Filament\Notifications\Notification::make()
+                    Notification::make()
                         ->success()
                         ->title(__('Studio Ditambahkan'))
                         ->body(__('Data studio rias baru telah berhasil ditambahkan.'))

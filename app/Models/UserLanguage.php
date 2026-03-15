@@ -4,7 +4,31 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property string $model_id
+ * @property string $model_type
+ * @property string|null $lang
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Model|\Eloquent $model
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserLanguage newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserLanguage newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserLanguage query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserLanguage whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserLanguage whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserLanguage whereLang($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserLanguage whereModelId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserLanguage whereModelType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserLanguage whereUpdatedAt($value)
+ * @property string $modelId
+ * @property string $modelType
+ * @property \Illuminate\Support\Carbon|null $createdAt
+ * @property \Illuminate\Support\Carbon|null $updatedAt
+ * @mixin \Eloquent
+ */
 class UserLanguage extends Model
 {
     protected $fillable = [
@@ -23,4 +47,3 @@ class UserLanguage extends Model
         return $this->morphTo();
     }
 }
-

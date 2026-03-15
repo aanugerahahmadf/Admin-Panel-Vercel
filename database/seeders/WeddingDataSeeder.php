@@ -2,11 +2,14 @@
 
 namespace Database\Seeders;
 
+use App\Models\Article;
+use App\Models\Banner;
 use App\Models\Category;
 use App\Models\Package;
 use App\Models\User;
 use App\Models\WeddingOrganizer;
 use Illuminate\Database\Seeder;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -155,7 +158,7 @@ class WeddingDataSeeder extends Seeder
         ];
 
         foreach ($banners as $b) {
-            \App\Models\Banner::updateOrCreate(['title' => $b['title']], $b);
+            Banner::updateOrCreate(['title' => $b['title']], $b);
         }
 
         // 4. Articles — dari Devi Make Up
@@ -182,7 +185,7 @@ class WeddingDataSeeder extends Seeder
 
         foreach ($articles as $a) {
             $a['slug'] = Str::slug($a['title']);
-            \App\Models\Article::updateOrCreate(['slug' => $a['slug']], $a);
+            Article::updateOrCreate(['slug' => $a['slug']], $a);
         }
 
         // 5. Sample customer — user yang ingin memesan di Devi Make Up
@@ -205,7 +208,7 @@ class WeddingDataSeeder extends Seeder
             $model->addMediaFromUrl($url)->toMediaCollection($collection);
         } catch (\Throwable $e) {
             try {
-                /** @var \Illuminate\Http\Client\Response $resp */
+                /** @var Response $resp */
                 $resp = Http::timeout(15)->get($url);
 
                 if ($resp->successful()) {

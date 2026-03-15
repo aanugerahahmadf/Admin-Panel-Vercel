@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -12,22 +13,22 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $payment_number
  * @property string $payment_method
  * @property string $status
- * @property numeric $amount
- * @property numeric $admin_fee
- * @property numeric $total_amount
+ * @property float $amount
+ * @property float $admin_fee
+ * @property float $total_amount
  * @property string|null $payment_proof
- * @property \Illuminate\Support\Carbon|null $paid_at
- * @property \Illuminate\Support\Carbon|null $expired_at
- * @property \Illuminate\Support\Carbon|null $cancelled_at
+ * @property Carbon|null $paid_at
+ * @property Carbon|null $expired_at
+ * @property Carbon|null $cancelled_at
  * @property string|null $notes
  * @property array<array-key, mixed>|null $metadata
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read string $payment_method_label
  * @property-read string $status_color
  * @property-read string $status_label
- * @property-read \App\Models\PaymentMethod|null $methodDetails
- * @property-read \App\Models\Order $order
+ * @property-read PaymentMethod|null $methodDetails
+ * @property-read Order $order
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Payment newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Payment newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Payment query()
@@ -45,8 +46,27 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Payment wherePaymentNumber($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Payment wherePaymentProof($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Payment whereStatus($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Payment whereTotalAmount($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Payment whereUpdatedAt($value)
+ * @method static \App\Models\Payment|null find(mixed $id, array|string $columns = ['*'])
+ * @method static \App\Models\Payment findOrFail(mixed $id, array|string $columns = ['*'])
+ * @method static \App\Models\Payment|null first(array|string $columns = ['*'])
+ * @method static \App\Models\Payment firstOrFail(array|string $columns = ['*'])
+ * @method static \Illuminate\Database\Eloquent\Collection<int, \App\Models\Payment> get(array|string $columns = ['*'])
+ * @property int $orderId
+ * @property string $paymentNumber
+ * @property string $paymentMethod
+ * @property numeric $adminFee
+ * @property numeric $totalAmount
+ * @property string|null $paymentProof
+ * @property \Illuminate\Support\Carbon|null $paidAt
+ * @property \Illuminate\Support\Carbon|null $expiredAt
+ * @property \Illuminate\Support\Carbon|null $cancelledAt
+ * @property \Illuminate\Support\Carbon|null $createdAt
+ * @property \Illuminate\Support\Carbon|null $updatedAt
+ * @property-read string $paymentMethodLabel
+ * @property-read string $statusColor
+ * @property-read string $statusLabel
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|\App\Models\Payment whereTotalAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|\App\Models\Payment whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class Payment extends Model
@@ -211,6 +231,7 @@ class Payment extends Model
     {
         return self::statusColors()[$this->status] ?? 'gray';
     }
+
     /**
      * Get the payment method details
      */

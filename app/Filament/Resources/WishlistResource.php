@@ -5,9 +5,17 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\WishlistResource\Pages;
 use App\Models\Wishlist;
 use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * @mixin \Eloquent
+ * @property-read \App\Models\Wishlist $record
+ */
 class WishlistResource extends Resource
 {
     protected static ?string $model = Wishlist::class;
@@ -16,8 +24,16 @@ class WishlistResource extends Resource
 
     protected static ?int $navigationSort = 7;
 
-    
-    
+    public static function getModelLabel(): string
+    {
+        return __('Keinginan Pelanggan');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Keinginan Pelanggan');
+    }
+
     public static function getNavigationGroup(): ?string
     {
         return __('Transaksi');
@@ -30,7 +46,10 @@ class WishlistResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::$model::count();
+        /** @var Builder $query */
+        $query = static::$model::query();
+
+        return (string) $query->count();
     }
 
     public static function getNavigationBadgeColor(): ?string
@@ -43,7 +62,7 @@ class WishlistResource extends Resource
         return __('Total Keinginan Pelanggan');
     }
 
-    public static function form(\Filament\Forms\Form $form): \Filament\Forms\Form
+    public static function form(Form $form): Form
     {
         return $form
             ->schema([
@@ -62,11 +81,11 @@ class WishlistResource extends Resource
                             ->searchable()
                             ->preload()
                             ->required(),
-                    ])->columns(2),
+                    ])->columns(['sm' => 2]),
             ]);
     }
 
-    public static function table(\Filament\Tables\Table $table): \Filament\Tables\Table
+    public static function table(Table $table): Table
     {
         return $table
             ->columns([
@@ -103,7 +122,7 @@ class WishlistResource extends Resource
                     ->color('warning')
                     ->size('lg')
                     ->successNotification(
-                        \Filament\Notifications\Notification::make()
+                        Notification::make()
                             ->success()
                             ->title(__('Wishlist diperbarui'))
                             ->body(__('Data keinginan pelanggan berhasil diubah.'))
@@ -113,7 +132,7 @@ class WishlistResource extends Resource
                     ->color('danger')
                     ->size('lg')
                     ->successNotification(
-                        \Filament\Notifications\Notification::make()
+                        Notification::make()
                             ->success()
                             ->title(__('Wishlist dihapus'))
                             ->body(__('Data keinginan pelanggan berhasil dihapus.'))

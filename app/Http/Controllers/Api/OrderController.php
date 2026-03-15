@@ -6,11 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Package;
 use App\Models\Voucher;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class OrderController extends Controller
 {
@@ -41,9 +41,10 @@ class OrderController extends Controller
             $items = $orders->items();
 
             // Manual serialize agar response konsisten (termasuk wedding_organizer di level order)
-            $data = collect($items)->map(function ($order) {
+            $data = collect($items)->map(function (\App\Models\Order $order) {
                 $pkg = $order->package;
                 $wo = $pkg?->weddingOrganizer;
+
                 return [
                     'id' => $order->id,
                     'user_id' => $order->user_id,
@@ -79,6 +80,7 @@ class OrderController extends Controller
             ]);
         } catch (\Throwable $e) {
             report($e);
+
             return response()->json([
                 'status' => 'error',
                 'message' => 'Gagal memuat pesanan',
@@ -103,13 +105,13 @@ class OrderController extends Controller
 
             // Check if package exists and is available
             $package = Package::findOrFail($validatedData['package_id']);
-            
+
             // Check if user already has an order for this date
             $existingOrder = Order::where('user_id', Auth::id())
                 ->where('booking_date', $validatedData['event_date'])
                 ->whereIn('status', ['pending', 'confirmed', 'paid'])
-                ->first();
-                
+                ->first(['*']);
+
             if ($existingOrder) {
                 return response()->json([
                     'status' => 'error',
@@ -127,8 +129,8 @@ class OrderController extends Controller
                     ->where('is_active', true)
                     ->where(function ($q): void {
                         $q->whereNull('expires_at')
-                          ->orWhere('expires_at', '>', now());
-                    })->first();
+                            ->orWhere('expires_at', '>', now());
+                    })->first(['*']);
 
                 if ($voucher && $basePrice >= $voucher->min_purchase) {
                     if ($voucher->discount_type === 'fixed') {
@@ -148,12 +150,12 @@ class OrderController extends Controller
             $order = Order::create([
                 'user_id' => Auth::id(),
                 'package_id' => $package->id,
-                'order_number' => 'ORD-' . strtoupper(Str::random(10)),
+                'order_number' => 'ORD-'.strtoupper(Str::random(10)),
                 'total_price' => $totalPrice,
                 'status' => 'pending',
                 'payment_status' => 'unpaid',
                 'booking_date' => $validatedData['event_date'],
-                'notes' => ($validatedData['notes'] ?? '') . ' | Location: ' . $validatedData['location_address'] . ($voucherId ? " | Voucher: {$request->voucher_code}" : ""),
+                'notes' => ($validatedData['notes'] ?? '').' | Location: '.$validatedData['location_address'].($voucherId ? " | Voucher: {$request->voucher_code}" : ''),
             ]);
 
             // Load relationships for the response
@@ -192,7 +194,7 @@ class OrderController extends Controller
         try {
             $order = Order::where('id', $id)
                 ->where('user_id', Auth::id())
-                ->firstOrFail();
+                ->firstOrFail(['*']);
 
             // Validate that order can proceed to payment
             if ($order->status === 'cancelled') {
@@ -215,8 +217,8 @@ class OrderController extends Controller
                 'order_id' => $order->id,
                 'order_number' => $order->order_number,
                 'total_amount' => $order->total_price,
-                'snap_token' => 'SNAP-' . Str::random(20),
-                'redirect_url' => config('app.url') . '/pay/' . $order->order_number,
+                'snap_token' => 'SNAP-'.Str::random(20),
+                'redirect_url' => config('app.url').'/pay/'.$order->order_number,
                 'payment_methods' => ['credit_card', 'bank_transfer', 'gopay', 'ovo', 'shopeepay'],
             ];
 
@@ -248,7 +250,7 @@ class OrderController extends Controller
             $order = Order::where('order_number', $orderNumber)
                 ->where('user_id', Auth::id())
                 ->with(['package.weddingOrganizer', 'latestPayment.methodDetails', 'payments.methodDetails'])
-                ->firstOrFail();
+                ->firstOrFail(['*']);
 
             return response()->json([
                 'status' => 'success',
@@ -277,7 +279,7 @@ class OrderController extends Controller
             $order = Order::where('id', $id)
                 ->where('user_id', Auth::id())
                 ->with(['package.weddingOrganizer', 'latestPayment', 'payments'])
-                ->firstOrFail();
+                ->firstOrFail(['*']);
 
             return response()->json([
                 'status' => 'success',
@@ -305,13 +307,13 @@ class OrderController extends Controller
         try {
             $order = Order::where('id', $id)
                 ->where('user_id', Auth::id())
-                ->firstOrFail();
+                ->firstOrFail(['*']);
 
             // Check if order can be cancelled
             if (in_array($order->status, ['completed', 'cancelled'])) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Cannot cancel an order that is already ' . $order->status,
+                    'message' => 'Cannot cancel an order that is already '.$order->status,
                 ], 400);
             }
 

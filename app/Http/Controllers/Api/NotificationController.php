@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -14,9 +15,9 @@ class NotificationController extends Controller
     public function index(Request $request)
     {
         try {
-            /** @var \App\Models\User $user */
+            /** @var User $user */
             $user = Auth::user();
-            
+
             $notifications = $user->notifications()
                 ->paginate($request->get('per_page', 20));
 
@@ -45,7 +46,7 @@ class NotificationController extends Controller
     public function markAsRead($id)
     {
         try {
-            /** @var \App\Models\User $user */
+            /** @var User $user */
             $user = Auth::user();
             $notification = $user->notifications()->findOrFail($id);
             $notification->markAsRead();
@@ -68,7 +69,7 @@ class NotificationController extends Controller
     public function markAllAsRead()
     {
         try {
-            /** @var \App\Models\User $user */
+            /** @var User $user */
             $user = Auth::user();
             $user->unreadNotifications->markAsRead();
 
@@ -90,8 +91,9 @@ class NotificationController extends Controller
     public function unreadCount()
     {
         try {
-            /** @var \App\Models\User $user */
+            /** @var User $user */
             $user = Auth::user();
+
             return response()->json([
                 'status' => 'success',
                 'data' => [

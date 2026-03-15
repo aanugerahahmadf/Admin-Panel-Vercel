@@ -2,20 +2,24 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\Order;
+use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Database\Eloquent\Builder;
 
 class StatsOverview extends BaseWidget
 {
     protected static ?int $sort = 1;
 
-
     protected function getStats(): array
     {
         // Helper to get trend data for the last 10 days
         $getTrend = function ($model) {
-            $data = $model::where('created_at', '>=', now()->subDays(10))
-                ->selectRaw('date(created_at) as date, count(*) as count')
+            /** @var Builder $query */
+            $query = $model::query()->where('created_at', '>=', now()->subDays(10));
+
+            $data = $query->selectRaw('date(created_at) as date, count(*) as count')
                 ->groupBy('date')
                 ->pluck('count', 'date')
                 ->toArray();
@@ -25,45 +29,56 @@ class StatsOverview extends BaseWidget
                 ->toArray();
         };
 
-        $userCounts = $getTrend(\App\Models\User::class);
-        $orderCounts = $getTrend(\App\Models\Order::class);
+        $userCounts = $getTrend(User::class);
+        $orderCounts = $getTrend(Order::class);
 
         // Calculate Revenue Trend (Last 10 days vs previous 10 days)
-        $revenueData = \App\Models\Order::where('payment_status', 'paid')
-            ->where('created_at', '>=', now()->subDays(10))
+        /** @var Builder $query */
+        $query = Order::where('payment_status', 'paid');
+
+        $revenueData = $query->where('created_at', '>=', now()->subDays(10))
             ->selectRaw('date(created_at) as date, sum(total_price) as sum')
             ->groupBy('date')
             ->pluck('sum', 'date')
             ->toArray();
-            
+
         $revenueCounts = collect(range(9, 0))
             ->map(fn ($days) => (float) ($revenueData[now()->subDays($days)->format('Y-m-d')] ?? 0))
             ->toArray();
 
-        $totalRevenue = \App\Models\Order::where('payment_status', 'paid')->sum('total_price');
-        $thisMonthRevenue = \App\Models\Order::where('payment_status', 'paid')
-            ->where('created_at', '>=', now()->startOfMonth())
+        /** @var Builder $revenueQuery */
+        $revenueQuery = Order::where('payment_status', 'paid');
+        $totalRevenue = $revenueQuery->sum('total_price');
+
+        /** @var Builder $monthRevenueQuery */
+        $monthRevenueQuery = Order::where('payment_status', 'paid');
+        $thisMonthRevenue = $monthRevenueQuery->where('created_at', '>=', now()->startOfMonth())
             ->sum('total_price');
 
         // Growth indicators
-        $newUserCount = \App\Models\User::where('created_at', '>=', now()->subDays(7))->count();
-        $newOrderCount = \App\Models\Order::where('created_at', '>=', now()->subDays(7))->count();
+        /** @var Builder $newUserQuery */
+        $newUserQuery = User::where('created_at', '>=', now()->subDays(7));
+        $newUserCount = $newUserQuery->count();
+
+        /** @var Builder $newOrderQuery */
+        $newOrderQuery = Order::where('created_at', '>=', now()->subDays(7));
+        $newOrderCount = $newOrderQuery->count();
 
         return [
-            Stat::make(__('Total Pengguna'), \App\Models\User::count())
-                ->description($newUserCount . ' ' . __('baru minggu ini'))
+            Stat::make(__('Total Pengguna'), (string) User::query()->count())
+                ->description($newUserCount.' '.__('baru minggu ini'))
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
                 ->chart($userCounts)
                 ->color('success'),
 
-            Stat::make(__('Total Pesanan'), \App\Models\Order::count())
-                ->description($newOrderCount . ' ' . __('baru minggu ini'))
+            Stat::make(__('Total Pesanan'), (string) Order::query()->count())
+                ->description($newOrderCount.' '.__('baru minggu ini'))
                 ->descriptionIcon('heroicon-m-shopping-bag')
                 ->chart($orderCounts)
                 ->color('info'),
 
-            Stat::make(__('Total Pendapatan'), 'IDR ' . number_format($totalRevenue, 0, ',', '.'))
-                ->description('IDR ' . number_format($thisMonthRevenue, 0, ',', '.') . ' ' . __('bulan ini'))
+            Stat::make(__('Total Pendapatan'), 'IDR '.number_format($totalRevenue, 0, ',', '.'))
+                ->description('IDR '.number_format($thisMonthRevenue, 0, ',', '.').' '.__('bulan ini'))
                 ->descriptionIcon($thisMonthRevenue > 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-banknotes')
                 ->chart($revenueCounts)
                 ->color('success'),

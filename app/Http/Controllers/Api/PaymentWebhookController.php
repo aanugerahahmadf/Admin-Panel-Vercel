@@ -38,7 +38,7 @@ class PaymentWebhookController extends Controller
             }
 
             // Find payment by transaction ID
-            $payment = Payment::where('transaction_id', $transactionId)->first();
+            $payment = Payment::where('transaction_id', $transactionId)->first(['*']);
 
             if (! $payment) {
                 Log::warning('Payment not found for transaction', ['transaction_id' => $transactionId]);
@@ -141,7 +141,7 @@ class PaymentWebhookController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $payment = Payment::findOrFail($paymentId);
+        $payment = Payment::findOrFail($paymentId, ['*']);
 
         if ($payment->payment_method !== 'bank_transfer') {
             return response()->json([

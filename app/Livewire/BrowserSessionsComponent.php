@@ -5,26 +5,31 @@ namespace App\Livewire;
 use Carbon\Carbon;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
+use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Components\Actions;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
-use Filament\Facades\Filament;
+use Filament\Support\Enums\Alignment;
+use Illuminate\Auth\SessionGuard;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Jenssegers\Agent\Agent;
-use Filament\Support\Enums\Alignment;
 use Livewire\Component;
 
+/**
+ * @mixin \Livewire\Component
+ */
 class BrowserSessionsComponent extends Component implements HasActions, HasForms
 {
     use InteractsWithActions;
     use InteractsWithForms;
-    
+
     public $selectedSessions = [];
+
     public $selectAll = false;
 
     protected static int $sort = 50;
@@ -86,7 +91,7 @@ class BrowserSessionsComponent extends Component implements HasActions, HasForms
             value: DB::connection(config(key: 'session.connection'))->table(table: config(key: 'session.table', default: 'sessions'))
                 ->where(column: 'user_id', operator: Auth::user()->getAuthIdentifier())
                 ->latest(column: 'last_activity')
-                ->get()
+                ->get(['*'])
         )->map(callback: function ($session): object {
             $agent = self::createAgent($session);
             $device = $agent->device();
@@ -128,12 +133,12 @@ class BrowserSessionsComponent extends Component implements HasActions, HasForms
             return;
         }
 
-        /** @var \Illuminate\Auth\SessionGuard $guard */
+        /** @var SessionGuard $guard */
         $guard = Auth::guard(Filament::getAuthGuard());
         $guard->logoutOtherDevices($password);
 
         request()->session()->put([
-            'password_hash_' . Filament::getAuthGuard() => Auth::user()->getAuthPassword(),
+            'password_hash_'.Filament::getAuthGuard() => Auth::user()->getAuthPassword(),
         ]);
 
         self::deleteOtherSessionRecords();

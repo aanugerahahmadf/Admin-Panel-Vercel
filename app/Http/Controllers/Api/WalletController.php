@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-
+use App\Models\PaymentMethod;
 use App\Models\Topup;
-use App\Models\PaymentSetting;
-use Illuminate\Support\Str;
+use App\Models\Withdrawal;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class WalletController extends Controller
 {
@@ -18,7 +18,7 @@ class WalletController extends Controller
             'status' => 'success',
             'data' => [
                 'balance' => $request->user()->balance,
-            ]
+            ],
         ]);
     }
 
@@ -30,7 +30,7 @@ class WalletController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data' => $history
+            'data' => $history,
         ]);
     }
 
@@ -46,14 +46,14 @@ class WalletController extends Controller
 
             $user = $request->user();
             $amount = $request->amount;
-            
+
             // Generate reference number
-            $referenceNumber = 'TOPUP-' . strtoupper(Str::random(10));
+            $referenceNumber = 'TOPUP-'.strtoupper(Str::random(10));
 
             // Fetch admin fee from PaymentMethod model
-            $method = \App\Models\PaymentMethod::where('code', $request->payment_method)->first();
+            $method = PaymentMethod::where('code', $request->payment_method)->first(['*']);
             $adminFee = $method ? floatval($method->fee) : 0;
-            
+
             $totalAmount = $amount + $adminFee;
 
             $topup = Topup::create([
@@ -71,14 +71,15 @@ class WalletController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Topup request created successfully',
-                'data' => $topup
+                'data' => $topup,
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'status' => 'error',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -89,7 +90,7 @@ class WalletController extends Controller
             'payment_proof' => 'required|image|max:2048',
         ]);
 
-        $topup = Topup::where('user_id', $request->user()->id)->findOrFail($id);
+        $topup = Topup::where('user_id', $request->user()->id)->findOrFail($id, ['*']);
 
         if ($request->hasFile('payment_proof')) {
             $path = $request->file('payment_proof')->store('payment-proofs', 'public');
@@ -102,9 +103,10 @@ class WalletController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Proof uploaded successfully',
-            'data' => $topup
+            'data' => $topup,
         ]);
     }
+
     public function requestWithdrawal(Request $request)
     {
         $request->validate([
@@ -124,13 +126,13 @@ class WalletController extends Controller
             if ($user->balance < $amount) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Insufficient balance'
+                    'message' => 'Insufficient balance',
                 ], 400);
             }
 
-            $referenceNumber = 'WD-' . strtoupper(Str::random(10));
+            $referenceNumber = 'WD-'.strtoupper(Str::random(10));
 
-            $withdrawal = \App\Models\Withdrawal::create([
+            $withdrawal = Withdrawal::create([
                 'user_id' => $user->id,
                 'reference_number' => $referenceNumber,
                 'amount' => $amount,
@@ -149,27 +151,28 @@ class WalletController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Withdrawal request created successfully',
-                'data' => $withdrawal
+                'data' => $withdrawal,
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'status' => 'error',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
 
     public function getWithdrawalHistory(Request $request)
     {
-        $history = \App\Models\Withdrawal::where('user_id', $request->user()->id)
+        $history = Withdrawal::where('user_id', $request->user()->id)
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
         return response()->json([
             'status' => 'success',
-            'data' => $history
+            'data' => $history,
         ]);
     }
 }

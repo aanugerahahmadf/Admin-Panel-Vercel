@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Traits;
 
-use Illuminate\Support\Facades\Auth;
 use App\Models\Message;
+use Illuminate\Support\Facades\Auth;
 
 trait CanMarkAsRead
 {
@@ -14,12 +14,12 @@ trait CanMarkAsRead
                 ->update([
                     'read_by' => [
                         ...$message->read_by,
-                        Auth::id()
+                        Auth::id(),
                     ],
                     'read_at' => [
                         ...$message->read_at,
-                        now()
-                    ]
+                        now(),
+                    ],
                 ]);
         });
     }

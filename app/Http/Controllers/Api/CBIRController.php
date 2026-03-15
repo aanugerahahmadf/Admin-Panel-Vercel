@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Package;
+use Illuminate\Http\Client\Response;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -24,7 +26,7 @@ class CBIRController extends Controller
     /**
      * Search for similar wedding packages using image
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function searchSimilar(Request $request)
     {
@@ -39,7 +41,7 @@ class CBIRController extends Controller
 
             // Call FastAPI AI Core with k as query parameter
             // Increase timeout for image processing
-            /** @var \Illuminate\Http\Client\Response $response */
+            /** @var Response $response */
             $response = Http::timeout(60)->attach(
                 'image', // Changed from 'file' to 'image' to match FastAPI
                 file_get_contents($image->getRealPath()),
@@ -64,11 +66,11 @@ class CBIRController extends Controller
 
             $packages = Package::with(['weddingOrganizer'])
                 ->whereIn('id', $packageIds)
-                ->get()
+                ->get(['*'])
                 ->keyBy('id');
 
             // Merge CBIR results with package data
-            $enrichedResults = collect($results['results'])->map(function ($item) use ($packages) {
+            $enrichedResults = collect($results['results'])->map(function (mixed $item) use ($packages) {
                 $packageId = $item['package_id'] ?? null;
 
                 if ($packageId && isset($packages[$packageId])) {
@@ -117,7 +119,7 @@ class CBIRController extends Controller
     /**
      * Index a package image into CBIR database
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function indexPackage(Request $request)
     {
@@ -183,12 +185,12 @@ class CBIRController extends Controller
     /**
      * Build index for all packages
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function buildIndex()
     {
         try {
-            $packages = Package::with(['weddingOrganizer.media'])->get();
+            $packages = Package::with(['weddingOrganizer.media'])->get(['*']);
 
             $indexed = 0;
             $errors = [];
@@ -253,12 +255,12 @@ class CBIRController extends Controller
     /**
      * Get CBIR index statistics
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function getStats()
     {
         try {
-            /** @var \Illuminate\Http\Client\Response $response */
+            /** @var Response $response */
             $response = Http::get($this->cbirApiUrl.'/status');
 
             if (! $response->successful()) {
@@ -287,12 +289,12 @@ class CBIRController extends Controller
     /**
      * Health check for CBIR service
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function healthCheck()
     {
         try {
-            /** @var \Illuminate\Http\Client\Response $response */
+            /** @var Response $response */
             $response = Http::timeout(3)->get($this->cbirApiUrl.'/status');
 
             return response()->json([

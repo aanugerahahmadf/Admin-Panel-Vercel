@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\User;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Forms;
@@ -11,11 +12,14 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
+use Filament\Support\Enums\Alignment;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Filament\Support\Enums\Alignment;
 use Livewire\Component;
 
+/**
+ * @mixin \Livewire\Component
+ */
 class DeleteAccountComponent extends Component implements HasActions, HasForms
 {
     use InteractsWithActions;
@@ -58,17 +62,23 @@ class DeleteAccountComponent extends Component implements HasActions, HasForms
                                         ->required(),
                                 ])
                                 ->action(function (array $data) {
+                                    /** @var User $user */
+                                    $user = Auth::user();
 
-                                    if (! Hash::check($data['password'], Auth::user()->password)) {
+                                    if (! $user) {
+                                        return;
+                                    }
+
+                                    if (! Hash::check($data['password'], $user->password)) {
                                         $this->sendErrorDeleteAccount(__('Kata sandi yang diberikan tidak cocok dengan catatan kami.'));
 
                                         return;
                                     }
 
-                                    if ($user = Auth::user()) {
-                                        $user->delete();
-                                    }
-                                    
+                                    $user->delete();
+
+                                    Auth::logout();
+
                                     return redirect('/');
                                 }),
                         ])->alignment(Alignment::End),

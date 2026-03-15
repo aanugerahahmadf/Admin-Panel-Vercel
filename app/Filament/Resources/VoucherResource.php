@@ -10,7 +10,12 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * @mixin \Eloquent
+ * @property-read \App\Models\Voucher $record
+ */
 class VoucherResource extends Resource
 {
     protected static ?string $model = Voucher::class;
@@ -21,8 +26,16 @@ class VoucherResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'code';
 
-    
-    
+    public static function getModelLabel(): string
+    {
+        return __('Voucher');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Voucher');
+    }
+
     public static function getNavigationGroup(): ?string
     {
         return __('Transaksi');
@@ -35,7 +48,10 @@ class VoucherResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::$model::count();
+        /** @var Builder $query */
+        $query = static::$model::query();
+
+        return (string) $query->count();
     }
 
     public static function getNavigationBadgeColor(): ?string
@@ -68,7 +84,7 @@ class VoucherResource extends Resource
                         Forms\Components\TextInput::make('description')
                             ->label(__('Deskripsi'))
                             ->maxLength(255),
-                    ])->columns(2),
+                    ])->columns(['sm' => 2]),
 
                 Forms\Components\Section::make(__('Konfigurasi Diskon'))
                     ->description(__('Pengaturan nilai diskon.'))
@@ -100,7 +116,7 @@ class VoucherResource extends Resource
                             ->label(__('Pembelian Minimum'))
                             ->numeric()
                             ->prefix('Rp'),
-                    ])->columns(3),
+                    ])->columns(['sm' => 3]),
 
                 Forms\Components\Section::make(__('Pengaturan Ketersediaan'))
                     ->description(__('Kelola waktu berlaku voucher dan statusnya.'))
@@ -111,7 +127,7 @@ class VoucherResource extends Resource
                             ->label(__('Status Aktif'))
                             ->default(true)
                             ->required(),
-                    ])->columns(2),
+                    ])->columns(['sm' => 2]),
             ]);
     }
 
@@ -144,7 +160,6 @@ class VoucherResource extends Resource
                 Tables\Columns\IconColumn::make('is_active')
                     ->label(__('Status'))
                     ->boolean()
-                    ->searchable()
                     ->alignment('center'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label(__('Dibuat Pada'))

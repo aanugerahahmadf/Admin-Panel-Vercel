@@ -2,11 +2,11 @@
 
 namespace App\Filament\Pages;
 
-use Filament\Pages\Dashboard as BaseDashboard;
-use App\Filament\Widgets\StatsOverview;
-use App\Filament\Widgets\RevenueChart;
 use App\Filament\Widgets\OrdersChart;
 use App\Filament\Widgets\RecentOrders;
+use App\Filament\Widgets\RevenueChart;
+use App\Filament\Widgets\StatsOverview;
+use Filament\Pages\Dashboard as BaseDashboard;
 
 class Dashboard extends BaseDashboard
 {

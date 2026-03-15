@@ -6,29 +6,31 @@ use App\Models\Order;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
+use Illuminate\Database\Eloquent\Builder;
 
 class RecentOrders extends BaseWidget
 {
     protected static ?int $sort = 4;
-    protected int | string | array $columnSpan = 'full';
+
+    protected int|string|array $columnSpan = 'full';
 
     public function getTableHeading(): string
     {
         return __('Pesanan Terbaru');
     }
-    
+
     public function table(Table $table): Table
     {
         return $table
             ->query(
-                fn () => Order::query()->latest()->limit(5)
+                fn (): Builder => Order::query()->latest()->limit(5)
             )
             ->columns([
                 Tables\Columns\TextColumn::make('order_number')
                     ->label(__('No. Pesanan'))
                     ->searchable()
                     ->weight('bold'),
-                Tables\Columns\TextColumn::make('user.name')
+                Tables\Columns\TextColumn::make('user.full_name')
                     ->label(__('Pelanggan')),
                 Tables\Columns\TextColumn::make('package.name')
                     ->label(__('Paket Rias'))

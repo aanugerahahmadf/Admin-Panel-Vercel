@@ -3,6 +3,7 @@
 namespace App\Database;
 
 use Illuminate\Database\MySqlConnection;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -27,12 +28,13 @@ use Illuminate\Support\Facades\Log;
 class MySqlProxyConnection extends MySqlConnection
 {
     protected ?string $proxyUrl;
+
     protected ?string $proxySecret;
 
     public function __construct($pdo, $database = '', $tablePrefix = '', array $config = [])
     {
         parent::__construct($pdo, $database, $tablePrefix, $config);
-        $this->proxyUrl    = $config['proxy_url']    ?? null;
+        $this->proxyUrl = $config['proxy_url'] ?? null;
         $this->proxySecret = $config['proxy_secret'] ?? null;
     }
 
@@ -43,61 +45,68 @@ class MySqlProxyConnection extends MySqlConnection
 
     public function select($query, $bindings = [], $useReadPdo = true): array
     {
-        $cacheKey = md5($query . serialize($bindings));
-        
+        $cacheKey = md5($query.serialize($bindings));
+
         if (isset(static::$queryCache[$cacheKey])) {
             return static::$queryCache[$cacheKey];
         }
 
         $result = $this->runProxy('select', $query, $bindings);
-        
+
         // Ensure result is an array before processing
-        if (!is_array($result)) {
-            Log::warning('[MySqlProxy] Select returned non-array result for query: ' . $query);
+        if (! is_array($result)) {
+            Log::warning('[MySqlProxy] Select returned non-array result for query: '.$query);
+
             return [];
         }
 
         // Proxy returns JSON array of plain objects — cast each row to stdClass
-        $rows = array_map(fn($row) => (object)(array)$row, $result);
-        
+        $rows = array_map(fn ($row) => (object) (array) $row, $result);
+
         static::$queryCache[$cacheKey] = $rows;
-        
+
         return $rows;
     }
 
     public function selectOne($query, $bindings = [], $useReadPdo = true): mixed
     {
         $rows = $this->select($query, $bindings, $useReadPdo);
+
         return $rows[0] ?? null;
     }
 
     public function insert($query, $bindings = [], $sequence = null): bool
     {
         $this->clearQueryCache();
+
         return (bool) $this->runProxy('insert', $query, $bindings);
     }
 
     public function update($query, $bindings = []): int
     {
         $this->clearQueryCache();
+
         return (int) $this->runProxy('update', $query, $bindings);
     }
 
     public function delete($query, $bindings = []): int
     {
         $this->clearQueryCache();
+
         return (int) $this->runProxy('delete', $query, $bindings);
     }
 
     public function statement($query, $bindings = []): bool
     {
         $this->clearQueryCache();
+
         return (bool) $this->runProxy('statement', $query, $bindings);
     }
 
     public function affectingStatement($query, $bindings = []): int
     {
         $this->clearQueryCache();
+
         return (int) $this->runProxy('statement', $query, $bindings);
     }
 
@@ -113,7 +122,8 @@ class MySqlProxyConnection extends MySqlConnection
     {
         // Attempt to verify the proxy is alive, then return a stub
         // (PDO is never actually used by this class)
-        return new class extends \PDO {
+        return new class extends \PDO
+        {
             public function __construct() {} // skip real PDO constructor
         };
     }
@@ -145,16 +155,16 @@ class MySqlProxyConnection extends MySqlConnection
                 ->retry(2, 100)
                 ->withHeaders([
                     'X-DB-PROXY-SECRET' => $this->proxySecret,
-                    'Accept'            => 'application/json',
+                    'Accept' => 'application/json',
                 ])
                 ->post($this->proxyUrl, [
-                    'method'   => $method,
-                    'query'    => $query,
+                    'method' => $method,
+                    'query' => $query,
                     'bindings' => $bindings,
                 ]);
 
             if ($response->failed()) {
-                $errorBody  = $response->json('error') ?? $response->body();
+                $errorBody = $response->json('error') ?? $response->body();
                 $statusCode = $response->status();
                 throw new \RuntimeException(
                     "[MySqlProxy] HTTP {$statusCode} from proxy: {$errorBody}"
@@ -163,18 +173,16 @@ class MySqlProxyConnection extends MySqlConnection
 
             return $response->json('result');
 
-        } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            $msg = "[MySqlProxy] Cannot reach proxy at {$this->proxyUrl}: " . $e->getMessage();
+        } catch (ConnectionException $e) {
+            $msg = "[MySqlProxy] Cannot reach proxy at {$this->proxyUrl}: ".$e->getMessage();
             Log::error($msg);
             throw new \RuntimeException($msg, 0, $e);
-
         } catch (\RuntimeException $e) {
-            Log::error('[MySqlProxy] Proxy error: ' . $e->getMessage());
+            Log::error('[MySqlProxy] Proxy error: '.$e->getMessage());
             throw $e;
-
         } catch (\Throwable $e) {
-            Log::error('[MySqlProxy] Unexpected error: ' . $e->getMessage());
-            throw new \RuntimeException('[MySqlProxy] ' . $e->getMessage(), 0, $e);
+            Log::error('[MySqlProxy] Unexpected error: '.$e->getMessage());
+            throw new \RuntimeException('[MySqlProxy] '.$e->getMessage(), 0, $e);
         }
     }
 }

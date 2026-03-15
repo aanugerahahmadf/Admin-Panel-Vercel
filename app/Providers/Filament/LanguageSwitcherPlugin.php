@@ -5,7 +5,6 @@ namespace App\Providers\Filament;
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Illuminate\Contracts\View\View;
-use App\Http\Middleware\LanguageSwitcherMiddleware;
 
 class LanguageSwitcherPlugin implements Plugin
 {
@@ -20,7 +19,6 @@ class LanguageSwitcherPlugin implements Plugin
             config('filament-language-switcher.language_switcher_render_hook'),
             fn (): View => $this->getLanguageSwitcherView()
         );
-
 
     }
 
@@ -54,4 +52,3 @@ class LanguageSwitcherPlugin implements Plugin
         ));
     }
 }
-

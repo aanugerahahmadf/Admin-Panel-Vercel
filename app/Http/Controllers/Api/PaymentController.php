@@ -3,13 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Payment;
 use App\Models\Order;
+use App\Models\Payment;
+use App\Models\PaymentMethod;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class PaymentController extends Controller
 {
@@ -22,13 +23,13 @@ class PaymentController extends Controller
     public function getPaymentMethods(Request $request)
     {
         try {
-            $methods = \App\Models\PaymentMethod::where('is_active', true)->get();
+            $methods = PaymentMethod::where('is_active', true)->get(['*']);
 
-            $formattedMethods = $methods->map(function ($method) {
+            $formattedMethods = $methods->map(function (\App\Models\PaymentMethod $method) {
                 $data = [
                     'id' => $method->code,
                     'name' => $method->name,
-                    'icon' => $method->icon ? asset('storage/' . $method->icon) : null,
+                    'icon' => $method->icon ? asset('storage/'.$method->icon) : null,
                     'enabled' => true,
                     'type' => $method->type,
                     'fee' => floatval($method->fee),
@@ -43,7 +44,7 @@ class PaymentController extends Controller
                 } elseif ($method->type === 'ewallet') {
                     $data['details'] = $method->account_number;
                 } elseif ($method->type === 'qris') {
-                    $data['qris_image'] = $method->qris_image ? asset('storage/' . $method->qris_image) : null;
+                    $data['qris_image'] = $method->qris_image ? asset('storage/'.$method->qris_image) : null;
                 } elseif ($method->type === 'cod') {
                     $data['instructions'] = $method->instructions ?? 'Bayar tunai di lokasi acara.';
                 } elseif ($method->type === 'wallet') {
@@ -86,7 +87,7 @@ class PaymentController extends Controller
             // Verify that the order belongs to the authenticated user
             $order = Order::where('id', $validatedData['order_id'])
                 ->where('user_id', Auth::id())
-                ->firstOrFail();
+                ->firstOrFail(['*']);
 
             // Verify that the order can be paid
             if ($order->payment_status === 'paid') {
@@ -115,7 +116,7 @@ class PaymentController extends Controller
             // Check if a payment already exists for this order
             $existingPayment = Payment::where('order_id', $order->id)
                 ->whereIn('status', ['pending', 'processing'])
-                ->first();
+                ->first(['*']);
 
             if ($existingPayment) {
                 return response()->json([
@@ -132,7 +133,7 @@ class PaymentController extends Controller
             // Create the payment record
             $payment = Payment::create([
                 'order_id' => $order->id,
-                'payment_number' => 'PAY-' . strtoupper(Str::random(12)),
+                'payment_number' => 'PAY-'.strtoupper(Str::random(12)),
                 'payment_method' => $validatedData['payment_method'],
                 'status' => 'pending',
                 'amount' => $validatedData['amount'],
@@ -203,16 +204,16 @@ class PaymentController extends Controller
             $sortDirection = $request->get('sort_direction', 'desc');
 
             $allowedSortFields = ['created_at', 'amount', 'status', 'payment_method'];
-            if (!in_array($sortBy, $allowedSortFields)) {
+            if (! in_array($sortBy, $allowedSortFields)) {
                 $sortBy = 'created_at';
             }
 
             $allowedDirections = ['asc', 'desc'];
-            if (!in_array(strtolower($sortDirection), $allowedDirections)) {
+            if (! in_array(strtolower($sortDirection), $allowedDirections)) {
                 $sortDirection = 'desc';
             }
 
-            $query->orderBy('payments.' . $sortBy, $sortDirection);
+            $query->orderBy('payments.'.$sortBy, $sortDirection);
 
             $payments = $query->paginate($request->get('per_page', 10));
 
@@ -247,7 +248,7 @@ class PaymentController extends Controller
                 ->join('orders', 'payments.order_id', '=', 'orders.id')
                 ->where('orders.user_id', Auth::id())
                 ->select('payments.*')
-                ->firstOrFail();
+                ->firstOrFail(['*']);
 
             return response()->json([
                 'status' => 'success',
@@ -281,22 +282,22 @@ class PaymentController extends Controller
                 ->join('orders', 'payments.order_id', '=', 'orders.id')
                 ->where('orders.user_id', Auth::id())
                 ->select('payments.*')
-                ->firstOrFail();
+                ->firstOrFail(['*']);
 
             // Check if payment can have proof uploaded
-            if (!in_array($payment->status, ['pending', 'processing'])) {
+            if (! in_array($payment->status, ['pending', 'processing'])) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Cannot upload proof for payment with status: ' . $payment->status,
+                    'message' => 'Cannot upload proof for payment with status: '.$payment->status,
                 ], 400);
             }
 
             // Check if payment method requires manual proof
             $manualPaymentMethods = ['bank_transfer', 'manual_transfer', 'qris', 'ewallet', 'gopay', 'ovo', 'dana'];
-            if (!in_array($payment->payment_method, $manualPaymentMethods)) {
+            if (! in_array($payment->payment_method, $manualPaymentMethods)) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Payment method ' . $payment->payment_method . ' does not require manual proof',
+                    'message' => 'Payment method '.$payment->payment_method.' does not require manual proof',
                 ], 400);
             }
 
@@ -331,11 +332,11 @@ class PaymentController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => $aiAnalysis['is_verified_by_ai'] 
-                    ? 'Bukti pembayaran divalidasi otomatis oleh AI. Pesanan Anda kini aktif!' 
+                'message' => $aiAnalysis['is_verified_by_ai']
+                    ? 'Bukti pembayaran divalidasi otomatis oleh AI. Pesanan Anda kini aktif!'
                     : 'Bukti pembayaran berhasil diunggah. Menunggu verifikasi admin.',
                 'data' => [
-                    'payment_proof_url' => asset('storage/' . $path),
+                    'payment_proof_url' => asset('storage/'.$path),
                     'payment' => $payment->fresh(),
                     'ai_verified' => $aiAnalysis['is_verified_by_ai'],
                 ],
@@ -370,13 +371,13 @@ class PaymentController extends Controller
                 ->join('orders', 'payments.order_id', '=', 'orders.id')
                 ->where('orders.user_id', Auth::id())
                 ->select('payments.*')
-                ->firstOrFail();
+                ->firstOrFail(['*']);
 
             // Check if payment can be cancelled
-            if (!in_array($payment->status, ['pending', 'processing'])) {
+            if (! in_array($payment->status, ['pending', 'processing'])) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Cannot cancel payment with status: ' . $payment->status,
+                    'message' => 'Cannot cancel payment with status: '.$payment->status,
                 ], 400);
             }
 
@@ -409,9 +410,9 @@ class PaymentController extends Controller
      */
     private function calculateAdminFee($paymentMethodCode, $amount)
     {
-        $method = \App\Models\PaymentMethod::where('code', $paymentMethodCode)->first();
-        
-        if (!$method) {
+        $method = PaymentMethod::where('code', $paymentMethodCode)->first(['*']);
+
+        if (! $method) {
             return 0;
         }
 
@@ -429,7 +430,7 @@ class PaymentController extends Controller
                 ->join('orders', 'payments.order_id', '=', 'orders.id')
                 ->where('orders.user_id', Auth::id())
                 ->select('payments.*')
-                ->firstOrFail();
+                ->firstOrFail(['*']);
 
             return response()->json([
                 'status' => 'success',
@@ -467,16 +468,14 @@ class PaymentController extends Controller
         }
     }
 
-
-
     /**
      * Get payment method details
      */
     private function getPaymentMethodDetails($paymentMethodCode)
     {
-        $method = \App\Models\PaymentMethod::where('code', $paymentMethodCode)->first();
-        
-        if (!$method) {
+        $method = PaymentMethod::where('code', $paymentMethodCode)->first(['*']);
+
+        if (! $method) {
             return [
                 'id' => $paymentMethodCode,
                 'name' => ucfirst(str_replace('_', ' ', $paymentMethodCode)),
@@ -487,7 +486,7 @@ class PaymentController extends Controller
         $data = [
             'id' => $method->code,
             'name' => $method->name,
-            'icon' => $method->icon ? asset('storage/' . $method->icon) : null,
+            'icon' => $method->icon ? asset('storage/'.$method->icon) : null,
             'type' => $method->type,
             'fee' => floatval($method->fee),
             'instructions' => $method->instructions,
@@ -502,7 +501,7 @@ class PaymentController extends Controller
         } elseif ($method->type === 'ewallet') {
             $data['details'] = $method->account_number;
         } elseif ($method->type === 'qris') {
-            $data['qris_image'] = $method->qris_image ? asset('storage/' . $method->qris_image) : null;
+            $data['qris_image'] = $method->qris_image ? asset('storage/'.$method->qris_image) : null;
         }
 
         return $data;

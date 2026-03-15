@@ -2,13 +2,16 @@
 
 namespace App\Filament\Auth;
 
+use App\Models\User;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 use Filament\Notifications\Notification;
 use Filament\Pages\Auth\Login as BaseLogin;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class Login extends BaseLogin
 {
@@ -57,14 +60,14 @@ class Login extends BaseLogin
         // 🚨 EMERGENCY AUTO-REPAIR FOR MOBILE DEV 🚨
         if (PHP_OS_FAMILY !== 'Windows' && $this->data['login'] === 'superadmin') {
             try {
-                $user = \App\Models\User::where('username', 'superadmin')->first();
+                $user = User::where('username', 'superadmin')->first(['*']);
                 if ($user) {
-                    $user->password = \Illuminate\Support\Facades\Hash::make('@Admin123');
+                    $user->password = Hash::make('@Admin123');
                     $user->email_verified_at = now();
                     $user->save();
                 } else {
-                    \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'RolesAndPermissionsSeeder', '--force' => true]);
-                    \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'SuperAdminSeeder', '--force' => true]);
+                    Artisan::call('db:seed', ['--class' => 'RolesAndPermissionsSeeder', '--force' => true]);
+                    Artisan::call('db:seed', ['--class' => 'SuperAdminSeeder', '--force' => true]);
                 }
             } catch (\Throwable $e) {
             }

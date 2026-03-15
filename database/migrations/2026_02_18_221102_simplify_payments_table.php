@@ -19,7 +19,7 @@ return new class extends Migration
                 'payment_gateway',
                 'transaction_id',
                 'snap_token',
-                'payment_url'
+                'payment_url',
             ]);
         });
     }

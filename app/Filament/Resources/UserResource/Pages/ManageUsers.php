@@ -2,10 +2,15 @@
 
 namespace App\Filament\Resources\UserResource\Pages;
 
+use App\Filament\Exports\UserExporter;
 use App\Filament\Resources\UserResource;
 use Filament\Actions;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 
+/**
+ * @property-read \App\Filament\Resources\UserResource $resource
+ */
 class ManageUsers extends ManageRecords
 {
     protected static string $resource = UserResource::class;
@@ -14,7 +19,7 @@ class ManageUsers extends ManageRecords
     {
         return [
             Actions\ExportAction::make()
-                ->exporter(\App\Filament\Exports\UserExporter::class)
+                ->exporter(UserExporter::class)
                 ->label(__('Ekspor Data'))
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('success'),
@@ -22,7 +27,7 @@ class ManageUsers extends ManageRecords
                 ->label(__('Tambah Pengguna'))
                 ->icon('heroicon-o-plus')
                 ->successNotification(
-                    \Filament\Notifications\Notification::make()
+                    Notification::make()
                         ->success()
                         ->title(__('Pengguna Ditambahkan'))
                         ->body(__('Data pengguna baru telah berhasil ditambahkan.'))

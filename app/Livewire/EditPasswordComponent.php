@@ -16,6 +16,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Livewire\Component;
 
+/**
+ * @mixin \Livewire\Component
+ */
 class EditPasswordComponent extends Component implements HasActions, HasForms
 {
     use InteractsWithActions;
@@ -78,7 +81,7 @@ class EditPasswordComponent extends Component implements HasActions, HasForms
             $data = $this->form->getState();
 
             $user = Filament::auth()->user();
-            
+
             $user->update([
                 'password' => $data['password'],
             ]);
@@ -88,7 +91,7 @@ class EditPasswordComponent extends Component implements HasActions, HasForms
 
         if (request()->hasSession() && array_key_exists('password', $data)) {
             request()->session()->put([
-                'password_hash_' . Filament::getAuthGuard() => $data['password'],
+                'password_hash_'.Filament::getAuthGuard() => $data['password'],
             ]);
         }
 

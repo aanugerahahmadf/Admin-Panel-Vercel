@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\LanguageSwitcherController;
 use Illuminate\Support\Facades\Route;
+use Native\Mobile\Facades\System;
 
 Route::get('/', function () {
     return view('welcome');
@@ -9,9 +11,10 @@ Route::get('/', function () {
 Route::redirect('/login', '/admin/login')->name('login');
 
 Route::get('/mobile/settings', function () {
-    \Native\Mobile\Facades\System::appSettings();
+    System::appSettings();
+
     return back();
 })->name('mobile.settings')->middleware(['auth']);
 
-Route::get('/filament/language-switcher', [\App\Http\Controllers\LanguageSwitcherController::class, 'index'])
+Route::get('/filament/language-switcher', [LanguageSwitcherController::class, 'index'])
     ->name('lang.switch');

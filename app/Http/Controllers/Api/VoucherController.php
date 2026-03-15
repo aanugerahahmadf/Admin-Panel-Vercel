@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Voucher;
+use Illuminate\Http\Request;
 
 class VoucherController extends Controller
 {
@@ -14,12 +15,12 @@ class VoucherController extends Controller
             'data' => Voucher::where('is_active', true)
                 ->where(function ($q): void {
                     $q->whereNull('expires_at')
-                      ->orWhere('expires_at', '>', now());
-                })->get(),
+                        ->orWhere('expires_at', '>', now());
+                })->get(['*']),
         ]);
     }
 
-    public function validateVoucher(\Illuminate\Http\Request $request)
+    public function validateVoucher(Request $request)
     {
         $request->validate([
             'code' => 'required|string',
@@ -30,10 +31,10 @@ class VoucherController extends Controller
             ->where('is_active', true)
             ->where(function ($q): void {
                 $q->whereNull('expires_at')
-                  ->orWhere('expires_at', '>', now());
-            })->first();
+                    ->orWhere('expires_at', '>', now());
+            })->first(['*']);
 
-        if (!$voucher) {
+        if (! $voucher) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Voucher tidak valid atau sudah kadaluarsa',
@@ -43,7 +44,7 @@ class VoucherController extends Controller
         if ($request->amount < $voucher->min_purchase) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Minimum pembelian untuk voucher ini adalah Rp ' . number_format($voucher->min_purchase, 0, ',', '.'),
+                'message' => 'Minimum pembelian untuk voucher ini adalah Rp '.number_format($voucher->min_purchase, 0, ',', '.'),
             ], 400);
         }
 

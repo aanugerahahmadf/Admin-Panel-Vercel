@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\Translation;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class AutoTranslationService
 {
@@ -17,52 +17,52 @@ class AutoTranslationService
      * Pemetaan locale Laravel → kode bahasa MyMemory API.
      */
     protected array $localeMap = [
-        'id'    => 'id',
-        'en'    => 'en-GB', // British English
+        'id' => 'id',
+        'en' => 'en-GB', // British English
         'en_US' => 'en-US', // American English
-        'ar'    => 'ar',
-        'de'    => 'de',
-        'fr'    => 'fr',
-        'es'    => 'es',
-        'it'    => 'it',
-        'ja'    => 'ja',
-        'ko'    => 'ko',
-        'zh'    => 'zh-CN',
-        'ru'    => 'ru',
-        'tr'    => 'tr',
-        'hi'    => 'hi',
-        'nl'    => 'nl',
-        'pt'    => 'pt',
+        'ar' => 'ar',
+        'de' => 'de',
+        'fr' => 'fr',
+        'es' => 'es',
+        'it' => 'it',
+        'ja' => 'ja',
+        'ko' => 'ko',
+        'zh' => 'zh-CN',
+        'ru' => 'ru',
+        'tr' => 'tr',
+        'hi' => 'hi',
+        'nl' => 'nl',
+        'pt' => 'pt',
         'pt_BR' => 'pt',
         'pt_PT' => 'pt-PT',
-        'vi'    => 'vi',
-        'th'    => 'th',
-        'ms'    => 'ms',
-        'fa'    => 'fa',
-        'ur'    => 'ur',
-        'bn'    => 'bn',
-        'fil'   => 'tl',
-        'pl'    => 'pl',
-        'uk'    => 'uk',
-        'ro'    => 'ro',
-        'cs'    => 'cs',
-        'hu'    => 'hu',
-        'el'    => 'el',
-        'sv'    => 'sv',
-        'da'    => 'da',
-        'fi'    => 'fi',
-        'no'    => 'no',
-        'hr'    => 'hr',
-        'sk'    => 'sk',
-        'bg'    => 'bg',
-        'lt'    => 'lt',
-        'lv'    => 'lv',
-        'et'    => 'et',
-        'sr'    => 'sr',
-        'he'    => 'he',
-        'sw'    => 'sw',
-        'my'    => 'my',
-        'am'    => 'am',
+        'vi' => 'vi',
+        'th' => 'th',
+        'ms' => 'ms',
+        'fa' => 'fa',
+        'ur' => 'ur',
+        'bn' => 'bn',
+        'fil' => 'tl',
+        'pl' => 'pl',
+        'uk' => 'uk',
+        'ro' => 'ro',
+        'cs' => 'cs',
+        'hu' => 'hu',
+        'el' => 'el',
+        'sv' => 'sv',
+        'da' => 'da',
+        'fi' => 'fi',
+        'no' => 'no',
+        'hr' => 'hr',
+        'sk' => 'sk',
+        'bg' => 'bg',
+        'lt' => 'lt',
+        'lv' => 'lv',
+        'et' => 'et',
+        'sr' => 'sr',
+        'he' => 'he',
+        'sw' => 'sw',
+        'my' => 'my',
+        'am' => 'am',
     ];
 
     /**
@@ -82,12 +82,12 @@ class AutoTranslationService
 
         // Jika target adalah bahasa Indonesia, dan teks kemungkinan besar sudah Indonesia atau Fallback, skip
         if ($targetLocale === 'id' && (preg_match('/[a-z]/i', $text) || preg_match('/[0-9]/', $text))) {
-             // Opsional: kita bisa tambahkan deteksi bahasa lebih lanjut di sini
-             // Tapi untuk performa 'Sinkron', kita asumsikan ID adalah default
+            // Opsional: kita bisa tambahkan deteksi bahasa lebih lanjut di sini
+            // Tapi untuk performa 'Sinkron', kita asumsikan ID adalah default
         }
 
         $sourceHash = md5($text);
-        $cacheKey = 'auto_trans.id.' . $targetLocale . '.' . $sourceHash;
+        $cacheKey = 'auto_trans.id.'.$targetLocale.'.'.$sourceHash;
 
         // 1. Cek Memory Cache (Super Fast)
         if (isset($this->memoryCache[$cacheKey])) {
@@ -98,30 +98,34 @@ class AutoTranslationService
         if (Cache::has($cacheKey)) {
             $value = Cache::get($cacheKey);
             $this->memoryCache[$cacheKey] = $value;
+
             return $value;
         }
 
         // 3. Cek Database via ORM (Eloquent)
-        $persistent = \App\Models\Translation::where('source_hash', $sourceHash)
+        $persistent = Translation::where('source_hash', $sourceHash)
             ->where('target_locale', $targetLocale)
-            ->first();
+            ->first(['*']);
 
         if ($persistent) {
             $value = $persistent->translated_text;
             Cache::put($cacheKey, $value, now()->addDays(30));
             $this->memoryCache[$cacheKey] = $value;
+
             return $value;
         }
 
         // 4. Panggil API (Hanya jika belum ada di manapun)
-        if (strlen($text) > 500) return $text;
+        if (strlen($text) > 500) {
+            return $text;
+        }
 
         $targetLang = $this->localeMap[$targetLocale] ?? $targetLocale;
         $translated = $this->callApi($text, $targetLang);
 
         // Simpan via ORM jika berhasil
         if ($translated !== $text) {
-            \App\Models\Translation::updateOrCreate(
+            Translation::updateOrCreate(
                 ['source_hash' => $sourceHash, 'target_locale' => $targetLocale],
                 ['source_text' => $text, 'translated_text' => $translated]
             );
@@ -129,6 +133,7 @@ class AutoTranslationService
         }
 
         $this->memoryCache[$cacheKey] = $translated;
+
         return $translated;
     }
 
@@ -143,18 +148,18 @@ class AutoTranslationService
                 ->withoutVerifying()
                 ->withUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
                 ->get('https://api.mymemory.translated.net/get', [
-                    'q'        => $text,
+                    'q' => $text,
                     'langpair' => "id|{$targetLang}",
                 ]);
 
             if ($response->successful()) {
                 $data = $response->json();
-                if (($data['responseStatus'] ?? 0) == 200 && !empty($data['responseData']['translatedText'])) {
+                if (($data['responseStatus'] ?? 0) == 200 && ! empty($data['responseData']['translatedText'])) {
                     $translated = $data['responseData']['translatedText'];
-                    
+
                     // Bersihkan tag XML/HTML
                     $translated = html_entity_decode(strip_tags($translated), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                    
+
                     // Validasi: Jika hasil malah pesan error API, abaikan
                     if (str_contains(strtoupper($translated), 'QUERY SPECIFIED') || str_contains(strtoupper($translated), 'MYMEMORY WARNING')) {
                         return $text;

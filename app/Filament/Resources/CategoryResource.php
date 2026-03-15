@@ -5,11 +5,17 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\CategoryResource\Pages;
 use App\Models\Category;
 use Filament\Forms;
+use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * @mixin \Eloquent
+ * @property-read \App\Models\Category $record
+ */
 class CategoryResource extends Resource
 {
     protected static ?string $model = Category::class;
@@ -20,13 +26,21 @@ class CategoryResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    public static function getModelLabel(): string
+    {
+        return __('Kategori');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Kategori');
+    }
+
     public static function getGloballySearchableAttributes(): array
     {
         return ['name', 'slug'];
     }
 
-    
-    
     public static function getNavigationGroup(): ?string
     {
         return __('Studio');
@@ -39,7 +53,10 @@ class CategoryResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::$model::count();
+        /** @var Builder $query */
+        $query = static::$model::query();
+
+        return (string) $query->count();
     }
 
     public static function getNavigationBadgeColor(): ?string
@@ -52,7 +69,7 @@ class CategoryResource extends Resource
         return __('Total Kategori Layanan');
     }
 
-    public static function form(\Filament\Forms\Form $form): \Filament\Forms\Form
+    public static function form(Form $form): Form
     {
         return $form
             ->schema([
@@ -68,7 +85,7 @@ class CategoryResource extends Resource
                         Forms\Components\TextInput::make('slug')
                             ->label(__('Slug'))
                             ->required()
-                            ->unique(ignorable: fn ($record) => $record)
+                            ->unique(ignorable: fn (?Category $record) => $record)
                             ->maxLength(255),
                         Forms\Components\TextInput::make('icon')
                             ->label(__('Ikon (Class/Name)'))
@@ -77,7 +94,7 @@ class CategoryResource extends Resource
                         Forms\Components\Textarea::make('description')
                             ->label(__('Deskripsi'))
                             ->columnSpanFull(),
-                    ])->columns(2),
+                    ])->columns(['sm' => 2]),
             ]);
     }
 

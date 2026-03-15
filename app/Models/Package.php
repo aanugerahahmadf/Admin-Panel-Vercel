@@ -2,9 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * @property int $id
@@ -13,27 +17,28 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property string $name
  * @property string $slug
  * @property string|null $description
- * @property numeric $price
- * @property numeric|null $discount_price
+ * @property float $price
+ * @property float|null $discount_price
  * @property bool $is_featured
  * @property array<array-key, mixed>|null $features
  * @property string|null $theme
  * @property string|null $color
  * @property int|null $min_capacity
  * @property int|null $max_capacity
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Category|null $category
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Category|null $category
  * @property-read mixed $image_url
  * @property-read bool $is_wishlisted
- * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
+ * @property-read string|null $video_url
+ * @property-read MediaCollection<int, Media> $media
  * @property-read int|null $media_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Order> $orders
+ * @property-read Collection<int, Order> $orders
  * @property-read int|null $orders_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Review> $reviews
+ * @property-read Collection<int, Review> $reviews
  * @property-read int|null $reviews_count
- * @property-read \App\Models\WeddingOrganizer $weddingOrganizer
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Wishlist> $wishlists
+ * @property-read WeddingOrganizer $weddingOrganizer
+ * @property-read Collection<int, Wishlist> $wishlists
  * @property-read int|null $wishlists_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Package newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Package newQuery()
@@ -52,8 +57,32 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Package wherePrice($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Package whereSlug($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Package whereTheme($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Package whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Package whereWeddingOrganizerId($value)
+ * @method static \App\Models\Package|null find(mixed $id, array|string $columns = ['*'])
+ * @method static \App\Models\Package findOrFail(mixed $id, array|string $columns = ['*'])
+ * @method static \App\Models\Package|null first(array|string $columns = ['*'])
+ * @method static \App\Models\Package firstOrFail(array|string $columns = ['*'])
+ * @method static \Illuminate\Database\Eloquent\Collection<int, \App\Models\Package> get(array|string $columns = ['*'])
+ * @property int $weddingOrganizerId
+ * @property int|null $categoryId
+ * @property numeric|null $discountPrice
+ * @property bool $isFeatured
+ * @property int|null $minCapacity
+ * @property int|null $maxCapacity
+ * @property \Illuminate\Support\Carbon|null $createdAt
+ * @property \Illuminate\Support\Carbon|null $updatedAt
+ * @property-read mixed $imageUrl
+ * @property-read bool $isWishlisted
+ * @property-read string|null $videoUrl
+ * @property-read int|null $mediaCount
+ * @property-read bool|null $mediaExists
+ * @property-read int|null $ordersCount
+ * @property-read bool|null $ordersExists
+ * @property-read int|null $reviewsCount
+ * @property-read bool|null $reviewsExists
+ * @property-read int|null $wishlistsCount
+ * @property-read bool|null $wishlistsExists
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|\App\Models\Package whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|\App\Models\Package whereWeddingOrganizerId($value)
  * @mixin \Eloquent
  */
 class Package extends Model implements HasMedia
@@ -109,7 +138,7 @@ class Package extends Model implements HasMedia
 
     public function getIsWishlistedAttribute(): bool
     {
-        if (!auth('sanctum')->check()) {
+        if (! auth('sanctum')->check()) {
             return false;
         }
 

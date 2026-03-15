@@ -2,23 +2,23 @@
 
 namespace App\Filament\Auth;
 
-use Filament\Facades\Filament;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
-use Filament\Pages\Auth\EmailVerification\EmailVerificationPrompt as BasePrompt;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Mail;
-use Filament\Notifications\Notification;
-use Filament\Actions\Action;
-use Filament\Forms\Components\ViewField;
-use Filament\Pages\Concerns\InteractsWithFormActions;
-use Illuminate\Contracts\Support\Htmlable;
 use App\Models\User;
+use Filament\Actions\Action;
+use Filament\Facades\Filament;
+use Filament\Forms\Components\ViewField;
+use Filament\Forms\Form;
+use Filament\Notifications\Notification;
+use Filament\Pages\Auth\EmailVerification\EmailVerificationPrompt;
+use Filament\Pages\Concerns\InteractsWithFormActions;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
-class OtpEmailVerificationPrompt extends \Filament\Pages\Auth\EmailVerification\EmailVerificationPrompt
+class OtpEmailVerificationPrompt extends EmailVerificationPrompt
 {
-    use \Filament\Pages\Concerns\InteractsWithFormActions;
+    use InteractsWithFormActions;
 
     protected static string $view = 'filament.pages.auth.otp-email-verification-prompt';
 
@@ -28,15 +28,16 @@ class OtpEmailVerificationPrompt extends \Filament\Pages\Auth\EmailVerification\
     {
         if (Filament::auth()->check() && $this->getVerifiable()->hasVerifiedEmail()) {
             redirect()->intended(Filament::getUrl());
+
             return;
         }
 
         $this->form->fill();
 
         $userId = Filament::auth()->id();
-        if ($userId && !Cache::has('otp_sent_' . $userId)) {
+        if ($userId && ! Cache::has('otp_sent_'.$userId)) {
             $this->sendEmailVerificationNotification($this->getVerifiable());
-            Cache::put('otp_sent_' . $userId, true, now()->addMinutes(15));
+            Cache::put('otp_sent_'.$userId, true, now()->addMinutes(15));
         }
     }
 
@@ -48,7 +49,7 @@ class OtpEmailVerificationPrompt extends \Filament\Pages\Auth\EmailVerification\
 
         /** @var User $user */
         $otp = random_int(100000, 999999);
-        Cache::put('otp_' . $user->id, $otp, now()->addMinutes(15));
+        Cache::put('otp_'.$user->id, $otp, now()->addMinutes(15));
 
         try {
             Mail::send('emails.otp', [
@@ -59,7 +60,7 @@ class OtpEmailVerificationPrompt extends \Filament\Pages\Auth\EmailVerification\
                 $message->to($user->email)->subject(__('Kode Verifikasi Email'));
             });
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error("Gagal kirim email verifikasi ke {$user->email}: " . $e->getMessage());
+            Log::error("Gagal kirim email verifikasi ke {$user->email}: ".$e->getMessage());
         }
     }
 
@@ -69,12 +70,12 @@ class OtpEmailVerificationPrompt extends \Filament\Pages\Auth\EmailVerification\
         /** @var User $user */
         $user = $this->getVerifiable();
 
-        $cachedOtp = Cache::get('otp_' . $user->id);
+        $cachedOtp = Cache::get('otp_'.$user->id);
 
         if ($cachedOtp && (string) $cachedOtp === (string) $data['otp']) {
             $user->markEmailAsVerified();
-            Cache::forget('otp_' . $user->id);
-            Cache::forget('otp_sent_' . $user->id);
+            Cache::forget('otp_'.$user->id);
+            Cache::forget('otp_sent_'.$user->id);
 
             Notification::make()->title(__('Email berhasil diverifikasi!'))->success()->send();
 
@@ -115,7 +116,7 @@ class OtpEmailVerificationPrompt extends \Filament\Pages\Auth\EmailVerification\
 
     public function getHeading(): string|Htmlable
     {
-        return __("Verifikasi Email Anda");
+        return __('Verifikasi Email Anda');
     }
 
     public function getSubheading(): string

@@ -5,8 +5,12 @@ namespace App\Filament\Resources\ArticleResource\Pages;
 use App\Filament\Exports\ArticleExporter;
 use App\Filament\Resources\ArticleResource;
 use Filament\Actions;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 
+/**
+ * @property-read \App\Filament\Resources\ArticleResource $resource
+ */
 class ManageArticles extends ManageRecords
 {
     protected static string $resource = ArticleResource::class;
@@ -23,7 +27,7 @@ class ManageArticles extends ManageRecords
                 ->label(__('Tambah Artikel'))
                 ->icon('heroicon-o-plus')
                 ->successNotification(
-                    \Filament\Notifications\Notification::make()
+                    Notification::make()
                         ->success()
                         ->title(__('Artikel Ditambahkan'))
                         ->body(__('Artikel baru telah berhasil ditambahkan.'))

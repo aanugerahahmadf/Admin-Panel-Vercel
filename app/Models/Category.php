@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -10,9 +12,9 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $slug
  * @property string|null $icon
  * @property string|null $description
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Package> $packages
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Collection<int, Package> $packages
  * @property-read int|null $packages_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Category newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Category newQuery()
@@ -22,8 +24,17 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Category whereIcon($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Category whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Category whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Category whereSlug($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Category whereUpdatedAt($value)
+ * @method static \App\Models\Category|null find(mixed $id, array|string $columns = ['*'])
+ * @method static \App\Models\Category findOrFail(mixed $id, array|string $columns = ['*'])
+ * @method static \App\Models\Category|null first(array|string $columns = ['*'])
+ * @method static \App\Models\Category firstOrFail(array|string $columns = ['*'])
+ * @method static \Illuminate\Database\Eloquent\Collection<int, \App\Models\Category> get(array|string $columns = ['*'])
+ * @property \Illuminate\Support\Carbon|null $createdAt
+ * @property \Illuminate\Support\Carbon|null $updatedAt
+ * @property-read int|null $packagesCount
+ * @property-read bool|null $packagesExists
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|\App\Models\Category whereSlug($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|\App\Models\Category whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class Category extends Model

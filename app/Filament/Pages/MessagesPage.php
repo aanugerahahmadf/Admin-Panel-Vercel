@@ -2,11 +2,12 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\Inbox;
 use Filament\Pages\Page;
 use Filament\Support\Enums\MaxWidth;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Inbox;
 
 class MessagesPage extends Page
 {
@@ -16,7 +17,7 @@ class MessagesPage extends Page
 
     public static function getSlug(): string
     {
-        return config('messages.slug', 'messages') . '/{id?}';
+        return config('messages.slug', 'messages').'/{id?}';
     }
 
     public static function shouldRegisterNavigation(): bool
@@ -37,16 +38,22 @@ class MessagesPage extends Page
     public static function getNavigationBadge(): ?string
     {
         if (config('messages.navigation.navigation_display_unread_messages_count')) {
-            return Inbox::whereJsonContains('user_ids', Auth::id())
-            ->whereHas('messages', function ($query) {
-                $query->whereJsonDoesntContain('read_by', Auth::id());
-            })->get()->count();
+            $userId = Auth::id();
+
+            /** @var Builder $query */
+            $query = Inbox::whereJsonContains('user_ids', $userId, 'and', false);
+
+            $count = (int) $query->whereHas('messages', function (Builder $q) use ($userId): void {
+                $q->whereJsonDoesntContain('read_by', $userId, 'and', false);
+            })->count();
+
+            return $count > 0 ? (string) $count : null;
         }
 
         return parent::getNavigationBadge();
     }
 
-    public static function getNavigationIcon(): string | Htmlable | null
+    public static function getNavigationIcon(): string|Htmlable|null
     {
         return config('messages.navigation.navigation_icon', 'heroicon-o-chat-bubble-left-right');
     }
@@ -59,7 +66,7 @@ class MessagesPage extends Page
     public function mount(?int $id = null): void
     {
         if ($id) {
-            $this->selectedConversation = Inbox::findOrFail($id);
+            $this->selectedConversation = Inbox::findOrFail($id, ['*']);
         }
     }
 
@@ -68,12 +75,12 @@ class MessagesPage extends Page
         return __(config('messages.navigation.navigation_label', 'Messages'));
     }
 
-    public function getMaxContentWidth(): MaxWidth | string | null
+    public function getMaxContentWidth(): MaxWidth|string|null
     {
         return config('messages.max_content_width', MaxWidth::Full);
     }
 
-    public function getHeading(): string | Htmlable
+    public function getHeading(): string|Htmlable
     {
         return __('Messages');
     }

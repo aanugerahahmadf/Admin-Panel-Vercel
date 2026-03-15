@@ -2,24 +2,28 @@
 
 namespace App\Filament\Auth;
 
-use Filament\Pages\Page;
-use Illuminate\Support\Facades\Cache;
-use Filament\Notifications\Notification;
-use Filament\Facades\Filament;
+use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Component;
-use Filament\Forms\Form;
 use Filament\Forms\Components\ViewField;
+use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Pages\Concerns\InteractsWithFormActions;
+use Filament\Pages\SimplePage;
+use Filament\Panel;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\URL;
 
-class VerifyOtp extends \Filament\Pages\SimplePage
+class VerifyOtp extends SimplePage
 {
-    use \Filament\Pages\Concerns\InteractsWithFormActions;
+    use InteractsWithFormActions;
+
     protected static string $view = 'filament.auth.verify-otp';
+
     protected static string $layout = 'filament-panels::components.layout.simple';
 
     public $email = '';
+
     public $otp = '';
 
     public static function getUrl(array $parameters = []): string
@@ -30,7 +34,7 @@ class VerifyOtp extends \Filament\Pages\SimplePage
     public function mount(): void
     {
         $this->email = request()->query('email', '');
-        
+
         if (blank($this->email)) {
             $this->redirect(route('filament.admin.auth.password-reset.request'));
         }
@@ -46,18 +50,18 @@ class VerifyOtp extends \Filament\Pages\SimplePage
         $email = $data['email'];
         $otp = $data['otp'];
 
-        $cachedOtp = Cache::get('password_reset_otp_' . $email);
+        $cachedOtp = Cache::get('password_reset_otp_'.$email);
 
         if ($cachedOtp && (string) $cachedOtp === (string) $otp) {
             // Tandai bahwa OTP sudah valid untuk email ini (berlaku 15 menit)
-            Cache::put('otp_verified_for_' . $email, true, now()->addMinutes(15));
+            Cache::put('otp_verified_for_'.$email, true, now()->addMinutes(15));
 
             Notification::make()
                 ->title(__('Kode OTP valid! Silakan atur kata sandi baru.'))
                 ->success()
                 ->send();
 
-            $this->redirect(\Illuminate\Support\Facades\URL::temporarySignedRoute(
+            $this->redirect(URL::temporarySignedRoute(
                 'filament.admin.auth.password-reset.reset',
                 now()->addMinutes(30),
                 [
@@ -105,9 +109,9 @@ class VerifyOtp extends \Filament\Pages\SimplePage
         ];
     }
 
-    protected function getVerifyFormAction(): \Filament\Actions\Action
+    protected function getVerifyFormAction(): Action
     {
-        return \Filament\Actions\Action::make('verify')
+        return Action::make('verify')
             ->label(__('Verifikasi Kode'))
             ->submit('verify');
     }
@@ -117,7 +121,7 @@ class VerifyOtp extends \Filament\Pages\SimplePage
         return false;
     }
 
-    public static function registerRoutes(\Filament\Panel $panel): void
+    public static function registerRoutes(Panel $panel): void
     {
         Route::get('/password-reset/verify', static::class)
             ->name('auth.verify-otp')

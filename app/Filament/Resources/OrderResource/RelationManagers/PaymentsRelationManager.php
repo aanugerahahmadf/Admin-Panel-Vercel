@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\OrderResource\RelationManagers;
 
+use App\Models\Payment;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -27,11 +28,11 @@ class PaymentsRelationManager extends RelationManager
                     ->prefix('Rp'),
                 Forms\Components\Select::make('status')
                     ->label(__('Status'))
-                    ->options(\App\Models\Payment::statusLabels())
+                    ->options(Payment::statusLabels())
                     ->required(),
                 Forms\Components\Select::make('payment_method')
                     ->label(__('Metode Pembayaran'))
-                    ->options(\App\Models\Payment::paymentMethodLabels())
+                    ->options(Payment::paymentMethodLabels())
                     ->required(),
                 Forms\Components\FileUpload::make('payment_proof')
                     ->label(__('Bukti Pembayaran'))

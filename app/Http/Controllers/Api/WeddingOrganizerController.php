@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Package;
 use App\Models\WeddingOrganizer;
-use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class WeddingOrganizerController extends Controller
 {
@@ -26,14 +26,14 @@ class WeddingOrganizerController extends Controller
                 'category_id' => 'nullable|integer|exists:categories,id',
                 'price_range' => 'nullable|string|in:low,mid,high,premium',
                 'sort_by' => [
-                    'nullable', 
-                    'string', 
-                    Rule::in(['name', 'rating', 'price', 'created_at', 'distance'])
+                    'nullable',
+                    'string',
+                    Rule::in(['name', 'rating', 'price', 'created_at', 'distance']),
                 ],
                 'sort_direction' => [
-                    'nullable', 
-                    'string', 
-                    Rule::in(['asc', 'desc'])
+                    'nullable',
+                    'string',
+                    Rule::in(['asc', 'desc']),
                 ],
                 'per_page' => 'nullable|integer|min:1|max:100',
             ]);
@@ -43,30 +43,30 @@ class WeddingOrganizerController extends Controller
                 ->where('is_verified', true);
 
             // Filter by location
-            if (!empty($validatedData['location'])) {
-                $query->where('address', 'like', '%' . $validatedData['location'] . '%');
+            if (! empty($validatedData['location'])) {
+                $query->where('address', 'like', '%'.$validatedData['location'].'%');
             }
 
             // Filter by minimum rating
-            if (!empty($validatedData['min_rating'])) {
+            if (! empty($validatedData['min_rating'])) {
                 $query->where('rating', '>=', $validatedData['min_rating']);
             }
 
             // Filter by maximum rating
-            if (!empty($validatedData['max_rating'])) {
+            if (! empty($validatedData['max_rating'])) {
                 $query->where('rating', '<=', $validatedData['max_rating']);
             }
 
             // Search by name or description
-            if (!empty($validatedData['search'])) {
+            if (! empty($validatedData['search'])) {
                 $query->where(function ($q) use ($validatedData): void {
-                    $q->where('name', 'like', '%' . $validatedData['search'] . '%')
-                      ->orWhere('description', 'like', '%' . $validatedData['search'] . '%');
+                    $q->where('name', 'like', '%'.$validatedData['search'].'%')
+                        ->orWhere('description', 'like', '%'.$validatedData['search'].'%');
                 });
             }
 
             // Filter by category (through packages)
-            if (!empty($validatedData['category_id'])) {
+            if (! empty($validatedData['category_id'])) {
                 $query->whereHas('packages', function ($q) use ($validatedData): void {
                     $q->where('category_id', $validatedData['category_id']);
                 });
@@ -93,7 +93,7 @@ class WeddingOrganizerController extends Controller
                     break;
             }
 
-            $organizers = $query->paginate($validatedData['per_page'] ?? 10);
+            $organizers = $query->paginate($validatedData['per_page'] ?? 10, ['*']);
 
             return response()->json([
                 'status' => 'success',
@@ -105,7 +105,7 @@ class WeddingOrganizerController extends Controller
                     'total' => $organizers->total(),
                     'has_more_pages' => $organizers->hasMorePages(),
                 ],
-                'filters_applied' => $validatedData
+                'filters_applied' => $validatedData,
             ]);
         } catch (ValidationException $e) {
             return response()->json([
@@ -135,10 +135,10 @@ class WeddingOrganizerController extends Controller
                 },
                 'reviews' => function ($query): void {
                     $query->with('user:id,full_name,avatar_url')->latest()->limit(5);
-                }
+                },
             ])
-            ->withCount(['reviews', 'packages'])
-            ->findOrFail($id);
+                ->withCount(['reviews', 'packages'])
+                ->findOrFail($id, ['*']);
 
             return response()->json([
                 'status' => 'success',
@@ -171,20 +171,20 @@ class WeddingOrganizerController extends Controller
                 'is_featured' => 'nullable|boolean',
                 'theme' => 'nullable|string|max:255',
                 'sort_by' => [
-                    'nullable', 
-                    'string', 
-                    Rule::in(['name', 'price', 'created_at', 'rating'])
+                    'nullable',
+                    'string',
+                    Rule::in(['name', 'price', 'created_at', 'rating']),
                 ],
                 'sort_direction' => [
-                    'nullable', 
-                    'string', 
-                    Rule::in(['asc', 'desc'])
+                    'nullable',
+                    'string',
+                    Rule::in(['asc', 'desc']),
                 ],
                 'per_page' => 'nullable|integer|min:1|max:100',
             ]);
 
-            $organizer = WeddingOrganizer::findOrFail($id);
-            
+            $organizer = WeddingOrganizer::findOrFail($id, ['*']);
+
             $query = Package::where('wedding_organizer_id', $id)
                 ->with(['category', 'reviews']);
 
@@ -206,7 +206,7 @@ class WeddingOrganizerController extends Controller
             }
 
             if ($request->filled('theme')) {
-                $query->where('theme', 'like', '%' . $request->theme . '%');
+                $query->where('theme', 'like', '%'.$request->theme.'%');
             }
 
             // Apply sorting
@@ -214,18 +214,18 @@ class WeddingOrganizerController extends Controller
             $sortDirection = $request->get('sort_direction', 'desc');
 
             $allowedSortFields = ['name', 'price', 'created_at', 'rating'];
-            if (!in_array($sortBy, $allowedSortFields)) {
+            if (! in_array($sortBy, $allowedSortFields)) {
                 $sortBy = 'created_at';
             }
 
             $allowedDirections = ['asc', 'desc'];
-            if (!in_array(strtolower($sortDirection), $allowedDirections)) {
+            if (! in_array(strtolower($sortDirection), $allowedDirections)) {
                 $sortDirection = 'desc';
             }
 
             $query->orderBy($sortBy, $sortDirection);
 
-            $packages = $query->paginate($request->get('per_page', 10));
+            $packages = $query->paginate($request->get('per_page', 10), ['*']);
 
             return response()->json([
                 'status' => 'success',
@@ -268,20 +268,20 @@ class WeddingOrganizerController extends Controller
                 'rating' => 'nullable|integer|min:1|max:5',
                 'min_rating' => 'nullable|integer|min:1|max:5',
                 'sort_by' => [
-                    'nullable', 
-                    'string', 
-                    Rule::in(['created_at', 'rating'])
+                    'nullable',
+                    'string',
+                    Rule::in(['created_at', 'rating']),
                 ],
                 'sort_direction' => [
-                    'nullable', 
-                    'string', 
-                    Rule::in(['asc', 'desc'])
+                    'nullable',
+                    'string',
+                    Rule::in(['asc', 'desc']),
                 ],
                 'per_page' => 'nullable|integer|min:1|max:100',
             ]);
 
-            $organizer = WeddingOrganizer::findOrFail($id);
-            
+            $organizer = WeddingOrganizer::findOrFail($id, ['*']);
+
             $query = $organizer->reviews()
                 ->with('user:id,full_name,avatar_url')
                 ->select(['reviews.*']); // Explicitly select from reviews table to avoid conflicts
@@ -300,18 +300,18 @@ class WeddingOrganizerController extends Controller
             $sortDirection = $request->get('sort_direction', 'desc');
 
             $allowedSortFields = ['created_at', 'rating'];
-            if (!in_array($sortBy, $allowedSortFields)) {
+            if (! in_array($sortBy, $allowedSortFields)) {
                 $sortBy = 'created_at';
             }
 
             $allowedDirections = ['asc', 'desc'];
-            if (!in_array(strtolower($sortDirection), $allowedDirections)) {
+            if (! in_array(strtolower($sortDirection), $allowedDirections)) {
                 $sortDirection = 'desc';
             }
 
-            $query->orderBy('reviews.' . $sortBy, $sortDirection);
+            $query->orderBy('reviews.'.$sortBy, $sortDirection);
 
-            $reviews = $query->paginate($request->get('per_page', 10));
+            $reviews = $query->paginate($request->get('per_page', 10), ['*']);
 
             return response()->json([
                 'status' => 'success',
@@ -355,7 +355,7 @@ class WeddingOrganizerController extends Controller
                 ->where('is_verified', true)
                 ->where('is_featured', true)
                 ->orderBy('rating', 'desc')
-                ->paginate($request->get('per_page', 10));
+                ->paginate($request->get('per_page', 10), ['*']);
 
             return response()->json([
                 'status' => 'success',
@@ -389,7 +389,7 @@ class WeddingOrganizerController extends Controller
                 ->where('rating', '>=', 4.0) // Top rated = 4 stars and above
                 ->orderBy('rating', 'desc')
                 ->orderBy('reviews_count', 'desc') // Secondary sort by number of reviews
-                ->paginate($request->get('per_page', 10));
+                ->paginate($request->get('per_page', 10), ['*']);
 
             return response()->json([
                 'status' => 'success',
@@ -430,7 +430,7 @@ class WeddingOrganizerController extends Controller
                 ->withCount(['reviews', 'packages'])
                 ->where('is_verified', true)
                 ->orderBy('created_at', 'desc') // Sort by newest as a placeholder
-                ->paginate($request->get('per_page', 10));
+                ->paginate($request->get('per_page', 10), ['*']);
 
             return response()->json([
                 'status' => 'success',
@@ -442,7 +442,7 @@ class WeddingOrganizerController extends Controller
                     'total' => $organizers->total(),
                     'has_more_pages' => $organizers->hasMorePages(),
                 ],
-                'message' => 'This is a placeholder. Actual proximity calculation would require geolocation features.'
+                'message' => 'This is a placeholder. Actual proximity calculation would require geolocation features.',
             ]);
         } catch (ValidationException $e) {
             return response()->json([

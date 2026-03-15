@@ -8,22 +8,9 @@
 .env.production
 .phpunit.result.cache
 docker-compose.override.yml
-user.ini
 /.vercel
 /.vercel_build_output
 /auth.json
-.vercelignore
 
-# Allow storage structure
-/storage/framework/cache/data/*
-!/storage/framework/cache/data/.gitkeep
-/storage/framework/sessions/*
-!/storage/framework/sessions/.gitkeep
-/storage/framework/testing/*
-!/storage/framework/testing/.gitkeep
-/storage/framework/views/*
-!/storage/framework/views/.gitkeep
-/storage/logs/*
-!/storage/logs/.gitkeep
-/bootstrap/cache/*
-!/bootstrap/cache/.gitkeep
+
+

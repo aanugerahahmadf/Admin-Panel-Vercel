@@ -5,25 +5,26 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
  * @property int $id
  * @property int $user_id
  * @property string $reference_number
- * @property numeric $amount
- * @property numeric $admin_fee
- * @property numeric $total_amount
+ * @property float $amount
+ * @property float $admin_fee
+ * @property float $total_amount
  * @property string|null $payment_method
  * @property string $status
  * @property string|null $payment_url
  * @property string|null $snap_token
  * @property string|null $payment_proof
- * @property \Illuminate\Support\Carbon|null $paid_at
+ * @property Carbon|null $paid_at
  * @property string|null $notes
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\User $user
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read User $user
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Topup newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Topup newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Topup query()
@@ -41,7 +42,23 @@ use Illuminate\Support\Str;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Topup whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Topup whereTotalAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Topup whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Topup whereUserId($value)
+ * @method static \App\Models\Topup|null find(mixed $id, array|string $columns = ['*'])
+ * @method static \App\Models\Topup findOrFail(mixed $id, array|string $columns = ['*'])
+ * @method static \App\Models\Topup|null first(array|string $columns = ['*'])
+ * @method static \App\Models\Topup firstOrFail(array|string $columns = ['*'])
+ * @method static \Illuminate\Database\Eloquent\Collection<int, \App\Models\Topup> get(array|string $columns = ['*'])
+ * @property int $userId
+ * @property string $referenceNumber
+ * @property numeric $adminFee
+ * @property numeric $totalAmount
+ * @property string|null $paymentMethod
+ * @property string|null $paymentUrl
+ * @property string|null $snapToken
+ * @property string|null $paymentProof
+ * @property \Illuminate\Support\Carbon|null $paidAt
+ * @property \Illuminate\Support\Carbon|null $createdAt
+ * @property \Illuminate\Support\Carbon|null $updatedAt
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|\App\Models\Topup whereUserId($value)
  * @mixin \Eloquent
  */
 class Topup extends Model
@@ -79,8 +96,8 @@ class Topup extends Model
     {
         parent::boot();
         static::creating(function ($model): void {
-            if (!$model->reference_number) {
-                $model->reference_number = 'TOPUP-' . strtoupper(Str::random(10));
+            if (! $model->reference_number) {
+                $model->reference_number = 'TOPUP-'.strtoupper(Str::random(10));
             }
         });
     }

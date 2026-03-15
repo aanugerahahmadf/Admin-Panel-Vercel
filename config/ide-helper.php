@@ -1,5 +1,8 @@
 <?php
 
+use Illuminate\Http\Client\Factory;
+use Illuminate\Http\Client\PendingRequest;
+
 return [
 
     /*
@@ -45,7 +48,7 @@ return [
     |
     */
 
-    'include_fluent' => false,
+    'include_fluent' => true,
 
     /*
     |--------------------------------------------------------------------------
@@ -59,7 +62,7 @@ return [
     |
     */
 
-    'include_factory_builders' => false,
+    'include_factory_builders' => true,
 
     /*
     |--------------------------------------------------------------------------
@@ -94,7 +97,7 @@ return [
     */
 
     'write_model_relation_count_properties' => true,
-    'write_model_relation_exists_properties' => false,
+    'write_model_relation_exists_properties' => true,
 
     /*
     |--------------------------------------------------------------------------
@@ -109,7 +112,7 @@ return [
     |
     */
 
-    'write_eloquent_model_mixins' => false,
+    'write_eloquent_model_mixins' => true,
 
     /*
     |--------------------------------------------------------------------------
@@ -121,11 +124,11 @@ return [
     |
     */
 
-    'include_helpers' => false,
+    'include_helpers' => true,
 
     'helper_files' => [
-        base_path() . '/vendor/laravel/framework/src/Illuminate/Support/helpers.php',
-        base_path() . '/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php',
+        base_path().'/vendor/laravel/framework/src/Illuminate/Support/helpers.php',
+        base_path().'/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php',
     ],
 
     /*
@@ -227,7 +230,7 @@ return [
      | Note, it is currently an all-or-nothing option.
      |
      */
-    'model_camel_case_properties' => false,
+    'model_camel_case_properties' => true,
 
     /*
     |--------------------------------------------------------------------------
@@ -240,6 +243,8 @@ return [
     'type_overrides' => [
         'integer' => 'int',
         'boolean' => 'bool',
+        'Carbon' => '\Illuminate\Support\Carbon',
+        'Collection' => '\Illuminate\Database\Eloquent\Collection',
     ],
 
     /*
@@ -251,7 +256,7 @@ return [
     | magic methods and properties.
     |
     */
-    'include_class_docblocks' => false,
+    'include_class_docblocks' => true,
 
     /*
     |--------------------------------------------------------------------------
@@ -263,7 +268,7 @@ return [
     | or there is an import (use className) of the class.
     |
     */
-    'force_fqn' => false,
+    'force_fqn' => true,
 
     /*
     |--------------------------------------------------------------------------
@@ -287,7 +292,7 @@ return [
     |
     */
     'macro_default_return_types' => [
-        Illuminate\Http\Client\Factory::class => Illuminate\Http\Client\PendingRequest::class,
+        Factory::class => PendingRequest::class,
     ],
 
     /*

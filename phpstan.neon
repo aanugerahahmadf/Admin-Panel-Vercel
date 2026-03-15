@@ -1,0 +1,20 @@
+parameters:
+    level: 0
+
+    paths:
+        - app
+        - bootstrap
+        - config
+        - database
+        - lang
+        - resources
+        - routes
+        - tests
+
+    excludePaths:
+        - vendor/*
+        - node_modules/*
+        - storage/*
+        - bootstrap/cache/*
+
+

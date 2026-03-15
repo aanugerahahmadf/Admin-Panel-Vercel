@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\WeddingOrganizer;
 use App\Services\CBIRService;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 
 class SearchController extends Controller
@@ -17,16 +18,16 @@ class SearchController extends Controller
 
         $query = $request->input('query');
 
-        /** @var \Illuminate\Database\Eloquent\Collection $organizers */
+        /** @var Collection $organizers */
         $organizers = WeddingOrganizer::where('name', 'like', "%{$query}%")
             ->orWhere('description', 'like', "%{$query}%")
             ->orWhere('address', 'like', "%{$query}%")
-            ->get();
+            ->get(['*']);
 
-        $formattedResults = $organizers->map(function ($wo) {
+        $formattedResults = $organizers->map(function (\App\Models\WeddingOrganizer $wo) {
             return [
                 'organizer' => $wo,
-                'package' => $wo->packages()->first(),
+                'package' => $wo->packages()->first(['*']),
                 'score' => 1.0,
                 'similarity' => 100,
                 'matched_image' => $wo->getFirstMediaUrl('gallery') ?: 'https://via.placeholder.com/800x400',
@@ -55,15 +56,15 @@ class SearchController extends Controller
             ]);
         }
 
-        $formattedResults = collect($results)->map(function ($result) {
-            $wo = WeddingOrganizer::find($result['owner_id']);
+        $formattedResults = collect($results)->map(function (mixed $result) {
+            $wo = WeddingOrganizer::find($result['owner_id'], ['*']);
             if (! $wo) {
                 return null;
             }
 
             return [
                 'organizer' => $wo,
-                'package' => $wo->packages()->first(),
+                'package' => $wo->packages()->first(['*']),
                 'score' => $result['score'],
                 'similarity' => $result['similarity'],
                 'matched_image' => $result['image_url'],

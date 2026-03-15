@@ -5,11 +5,17 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\BannerResource\Pages;
 use App\Models\Banner;
 use Filament\Forms;
+use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * @mixin \Eloquent
+ * @property-read \App\Models\Banner $record
+ */
 class BannerResource extends Resource
 {
     protected static ?string $model = Banner::class;
@@ -20,13 +26,21 @@ class BannerResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'title';
 
+    public static function getModelLabel(): string
+    {
+        return __('Banner');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Banner');
+    }
+
     public static function getGloballySearchableAttributes(): array
     {
         return ['title'];
     }
 
-    
-    
     public static function getNavigationGroup(): ?string
     {
         return __('Blog & Media');
@@ -39,7 +53,10 @@ class BannerResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::$model::count();
+        /** @var Builder $query */
+        $query = static::$model::query();
+
+        return (string) $query->count();
     }
 
     public static function getNavigationBadgeColor(): ?string
@@ -52,7 +69,7 @@ class BannerResource extends Resource
         return __('Total Banner Promo');
     }
 
-    public static function form(\Filament\Forms\Form $form): \Filament\Forms\Form
+    public static function form(Form $form): Form
     {
         return $form
             ->schema([
@@ -72,7 +89,7 @@ class BannerResource extends Resource
                             ->label(__('URL Pengalihan'))
                             ->placeholder(__('https://example.com'))
                             ->maxLength(255),
-                    ])->columns(2),
+                    ])->columns(['sm' => 2]),
 
                 Forms\Components\Section::make(__('Konfigurasi'))
                     ->description(__('Pengaturan visibilitas banner dan urutan tampilan.'))
@@ -85,7 +102,7 @@ class BannerResource extends Resource
                             ->required()
                             ->numeric()
                             ->default(0),
-                    ])->columns(2),
+                    ])->columns(['sm' => 2]),
             ]);
     }
 

@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Package;
-use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Request;
 
 class PackageController extends Controller
 {
@@ -23,7 +23,7 @@ class PackageController extends Controller
             }
 
             if ($request->filled('theme')) {
-                $query->where('theme', 'like', '%' . $request->theme . '%');
+                $query->where('theme', 'like', '%'.$request->theme.'%');
             }
 
             if ($request->filled('min_price')) {
@@ -41,8 +41,8 @@ class PackageController extends Controller
             if ($request->filled('search')) {
                 $searchTerm = $request->search;
                 $query->where(function ($q) use ($searchTerm): void {
-                    $q->where('name', 'like', '%' . $searchTerm . '%')
-                      ->orWhere('description', 'like', '%' . $searchTerm . '%');
+                    $q->where('name', 'like', '%'.$searchTerm.'%')
+                        ->orWhere('description', 'like', '%'.$searchTerm.'%');
                 });
             }
 
@@ -52,19 +52,19 @@ class PackageController extends Controller
 
             // Validate sort parameters to prevent injection
             $allowedSortFields = ['name', 'price', 'created_at', 'rating', 'discount_price'];
-            if (!in_array($sortBy, $allowedSortFields)) {
+            if (! in_array($sortBy, $allowedSortFields)) {
                 $sortBy = 'created_at';
             }
 
             $allowedDirections = ['asc', 'desc'];
-            if (!in_array(strtolower($sortDirection), $allowedDirections)) {
+            if (! in_array(strtolower($sortDirection), $allowedDirections)) {
                 $sortDirection = 'desc';
             }
 
             $query->orderBy($sortBy, $sortDirection);
 
             // Paginate results
-            $packages = $query->paginate($request->get('per_page', 10));
+            $packages = $query->paginate($request->get('per_page', 10), ['*']);
 
             return response()->json([
                 'status' => 'success',
@@ -98,8 +98,8 @@ class PackageController extends Controller
                 'reviews' => function ($query): void {
                     $query->with('user:id,full_name,avatar_url')->latest()->limit(5);
                 },
-                'media'
-            ])->findOrFail($id);
+                'media',
+            ])->findOrFail($id, ['*']);
 
             return response()->json([
                 'status' => 'success',
@@ -127,7 +127,7 @@ class PackageController extends Controller
         try {
             $packages = Package::with(['weddingOrganizer', 'category', 'reviews'])
                 ->where('is_featured', true)
-                ->paginate($request->get('per_page', 10));
+                ->paginate($request->get('per_page', 10), ['*']);
 
             return response()->json([
                 'status' => 'success',
@@ -158,7 +158,7 @@ class PackageController extends Controller
             $packages = Package::with(['weddingOrganizer', 'category', 'reviews'])
                 ->whereNotNull('discount_price')
                 ->where('discount_price', '<', 'price')
-                ->paginate($request->get('per_page', 10));
+                ->paginate($request->get('per_page', 10), ['*']);
 
             return response()->json([
                 'status' => 'success',

@@ -5,8 +5,12 @@ namespace App\Filament\Resources\PaymentResource\Pages;
 use App\Filament\Exports\PaymentExporter;
 use App\Filament\Resources\PaymentResource;
 use Filament\Actions;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 
+/**
+ * @property-read \App\Filament\Resources\PaymentResource $resource
+ */
 class ManagePayments extends ManageRecords
 {
     protected static string $resource = PaymentResource::class;
@@ -23,7 +27,7 @@ class ManagePayments extends ManageRecords
                 ->label(__('Tambah Pembayaran'))
                 ->icon('heroicon-o-plus')
                 ->successNotification(
-                    \Filament\Notifications\Notification::make()
+                    Notification::make()
                         ->success()
                         ->title(__('Pembayaran Ditambahkan'))
                         ->body(__('Data pembayaran baru telah berhasil ditambahkan.'))

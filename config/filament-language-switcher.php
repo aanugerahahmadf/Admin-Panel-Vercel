@@ -10,18 +10,18 @@ return [
      |
      */
     'locals' => [
-        'id'    => ['flag' => 'id', 'label' => 'Indonesian'],
-        'en'    => ['flag' => 'gb', 'label' => 'English (UK)'],
+        'id' => ['flag' => 'id', 'label' => 'Indonesian'],
+        'en' => ['flag' => 'gb', 'label' => 'English (UK)'],
         'en_US' => ['flag' => 'us', 'label' => 'English (US)'],
-        'ar'    => ['flag' => 'sa', 'label' => 'Arabic'],
-        'de'    => ['flag' => 'de', 'label' => 'German'],
-        'es'    => ['flag' => 'es', 'label' => 'Spanish'],
-        'fr'    => ['flag' => 'fr', 'label' => 'French'],
-        'it'    => ['flag' => 'it', 'label' => 'Italian'],
-        'ja'    => ['flag' => 'jp', 'label' => 'Japanese'],
-        'ko'    => ['flag' => 'kr', 'label' => 'Korean'],
-        'zh'    => ['flag' => 'cn', 'label' => 'Chinese'],
-        'ru'    => ['flag' => 'ru', 'label' => 'Russian'],
+        'ar' => ['flag' => 'sa', 'label' => 'Arabic'],
+        'de' => ['flag' => 'de', 'label' => 'German'],
+        'es' => ['flag' => 'es', 'label' => 'Spanish'],
+        'fr' => ['flag' => 'fr', 'label' => 'French'],
+        'it' => ['flag' => 'it', 'label' => 'Italian'],
+        'ja' => ['flag' => 'jp', 'label' => 'Japanese'],
+        'ko' => ['flag' => 'kr', 'label' => 'Korean'],
+        'zh' => ['flag' => 'cn', 'label' => 'Chinese'],
+        'ru' => ['flag' => 'ru', 'label' => 'Russian'],
     ],
 
     /*

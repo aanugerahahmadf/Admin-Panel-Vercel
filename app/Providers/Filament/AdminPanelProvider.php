@@ -2,27 +2,38 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Auth\Login;
+use App\Filament\Auth\OtpEmailVerificationPrompt;
+use App\Filament\Auth\OtpRequestPasswordReset;
+use App\Filament\Auth\OtpResetPassword;
+use App\Filament\Auth\Register;
+use App\Filament\Auth\VerifyOtp;
+use App\Filament\Pages\Dashboard;
+use App\Filament\Pages\EditProfilePage;
+use App\Filament\Widgets\OrdersChart;
+use App\Filament\Widgets\RecentOrders;
+use App\Filament\Widgets\RevenueChart;
+use App\Filament\Widgets\StatsOverview;
+use App\Http\Middleware\SetLocale;
+use App\Http\Middleware\SuperAdmin;
+use App\Http\Middleware\VerifyCsrfToken;
 use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\MenuItem;
 use Filament\Navigation\NavigationGroup;
-use App\Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Support\Enums\MaxWidth;
+use Illuminate\Contracts\View\View;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use App\Filament\Pages\EditProfilePage;
-use App\Http\Middleware\VerifyCsrfToken;
-use App\Http\Middleware\SuperAdmin;
-use Livewire\Livewire;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -32,16 +43,16 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login(\App\Filament\Auth\Login::class)
-            ->registration(\App\Filament\Auth\Register::class)
+            ->login(Login::class)
+            // ->registration(Register::class)
             ->passwordReset(
-                \App\Filament\Auth\OtpRequestPasswordReset::class,
-                \App\Filament\Auth\OtpResetPassword::class
+                OtpRequestPasswordReset::class,
+                OtpResetPassword::class
             )
-            ->emailVerification(\App\Filament\Auth\OtpEmailVerificationPrompt::class)
+            ->emailVerification(OtpEmailVerificationPrompt::class)
             ->sidebarFullyCollapsibleOnDesktop()
             ->brandName(config('app.name'))
-            ->simplePageMaxContentWidth(MaxWidth::Small)
+            // ->simplePageMaxContentWidth(MaxWidth::Small)
             ->colors([
                 'danger' => Color::Rose,
                 'gray' => Color::Gray,
@@ -53,9 +64,14 @@ class AdminPanelProvider extends PanelProvider
             ->defaultThemeMode(ThemeMode::System)
             ->topNavigation()
             ->databaseNotifications()
-            ->plugins([
-                \App\Providers\Filament\LanguageSwitcherPlugin::make(),
-            ])
+            ->renderHook(
+                'panels::global-search.after',
+                fn (): View => view('filament-language-switcher::language-switcher', [
+                    'otherLanguages' => config('filament-language-switcher.locals'),
+                    'currentLanguage' => collect(config('filament-language-switcher.locals'))->firstWhere('code', app()->getLocale()),
+                    'showFlags' => config('filament-language-switcher.show_flags'),
+                ])
+            )
             ->userMenuItems([
                 'profile' => MenuItem::make()
                     ->label(fn (): string => Auth::user()?->full_name ?? __('Profil'))
@@ -76,17 +92,17 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                \App\Filament\Widgets\StatsOverview::class,
-                \App\Filament\Widgets\RevenueChart::class,
-                \App\Filament\Widgets\OrdersChart::class,
-                \App\Filament\Widgets\RecentOrders::class,
+                StatsOverview::class,
+                RevenueChart::class,
+                OrdersChart::class,
+                RecentOrders::class,
             ])
             ->middleware([
                 VerifyCsrfToken::class,
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
-                \App\Http\Middleware\SetLocale::class,
+                SetLocale::class,
                 ShareErrorsFromSession::class,
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
@@ -97,7 +113,7 @@ class AdminPanelProvider extends PanelProvider
                 SuperAdmin::class,
             ])
             ->routes(function (Panel $panel) {
-                \App\Filament\Auth\VerifyOtp::registerRoutes($panel);
+                VerifyOtp::registerRoutes($panel);
             });
     }
 }

@@ -3,17 +3,17 @@
 namespace App\Filament\Auth;
 
 use App\Models\User;
+use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Wizard;
 use Filament\Forms\Components\Wizard\Step;
 use Filament\Forms\Form;
-use Filament\Forms\Components\Component;
 use Filament\Pages\Auth\Register as BaseRegister;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\HtmlString;
 use Spatie\Permission\Models\Role;
-use Illuminate\Contracts\Support\Htmlable;
 
 class Register extends BaseRegister
 {
@@ -83,7 +83,7 @@ class Register extends BaseRegister
                                 ->rows(3),
                         ]),
                 ])
-                    ->submitAction(new HtmlString('<button type="submit" style="background-color: #e11d48; color: white; padding: 0.5rem 1.5rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; border: none; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor=\'#be123c\'" onmouseout="this.style.backgroundColor=\'#e11d48\'">' . __('Daftar') . '</button>')),
+                    ->submitAction(new HtmlString('<button type="submit" style="background-color: #e11d48; color: white; padding: 0.5rem 1.5rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; border: none; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor=\'#be123c\'" onmouseout="this.style.backgroundColor=\'#e11d48\'">'.__('Daftar').'</button>')),
             ])
             ->statePath('data');
     }
@@ -96,7 +96,7 @@ class Register extends BaseRegister
     protected function handleRegistration(array $data): User
     {
         $user = User::create([
-            'name' => trim(($data['first_name'] ?? '').' '.($data['last_name'] ?? '')),
+            'full_name' => trim(($data['first_name'] ?? '').' '.($data['last_name'] ?? '')),
             'first_name' => $data['first_name'],
             'last_name' => $data['last_name'],
             'username' => $data['username'],
@@ -107,7 +107,7 @@ class Register extends BaseRegister
         ]);
 
         // Assign customer role automatically
-        $customerRole = Role::where('name', 'customer')->first();
+        $customerRole = Role::where('name', 'customer')->first(['*']);
         if ($customerRole) {
             $user->assignRole($customerRole);
         }

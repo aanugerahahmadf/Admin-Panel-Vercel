@@ -5,8 +5,12 @@ namespace App\Filament\Resources\VoucherResource\Pages;
 use App\Filament\Exports\VoucherExporter;
 use App\Filament\Resources\VoucherResource;
 use Filament\Actions;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 
+/**
+ * @property-read \App\Filament\Resources\VoucherResource $resource
+ */
 class ManageVouchers extends ManageRecords
 {
     protected static string $resource = VoucherResource::class;
@@ -23,7 +27,7 @@ class ManageVouchers extends ManageRecords
                 ->label(__('Tambah Voucher'))
                 ->icon('heroicon-o-plus')
                 ->successNotification(
-                    \Filament\Notifications\Notification::make()
+                    Notification::make()
                         ->success()
                         ->title(__('Voucher Ditambahkan'))
                         ->body(__('Voucher baru telah berhasil ditambahkan.'))

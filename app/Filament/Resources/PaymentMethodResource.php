@@ -5,12 +5,18 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\PaymentMethodResource\Pages;
 use App\Models\PaymentMethod;
 use Filament\Forms;
+use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
+/**
+ * @mixin \Eloquent
+ * @property-read \App\Models\PaymentMethod $record
+ */
 class PaymentMethodResource extends Resource
 {
     protected static ?string $model = PaymentMethod::class;
@@ -19,8 +25,16 @@ class PaymentMethodResource extends Resource
 
     protected static ?int $navigationSort = 5;
 
-    
-    
+    public static function getModelLabel(): string
+    {
+        return __('Metode Pembayaran');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Metode Pembayaran');
+    }
+
     public static function getNavigationGroup(): ?string
     {
         return __('Transaksi');
@@ -33,7 +47,10 @@ class PaymentMethodResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::$model::count();
+        /** @var Builder $query */
+        $query = static::$model::query();
+
+        return (string) $query->count();
     }
 
     public static function getNavigationBadgeColor(): ?string
@@ -46,11 +63,11 @@ class PaymentMethodResource extends Resource
         return __('Total Metode Pembayaran Aktif');
     }
 
-    public static function form(\Filament\Forms\Form $form): \Filament\Forms\Form
+    public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\Grid::make(3)
+                Forms\Components\Grid::make(['sm' => 3])
                     ->schema([
                         Forms\Components\Section::make(__('Konfigurasi Dasar'))
                             ->description(__('Tentukan identitas dan tipe metode pembayaran ini.'))
@@ -125,7 +142,7 @@ class PaymentMethodResource extends Resource
                 Forms\Components\Section::make(__('Detail Konten & Instruksi'))
                     ->description(__('Lengkapi informasi rekening atau gambar QRIS.'))
                     ->schema([
-                        Forms\Components\Grid::make(2)
+                        Forms\Components\Grid::make(['sm' => 2])
                             ->schema([
                                 Forms\Components\TextInput::make('account_number')
                                     ->label(fn (Forms\Get $get) => $get('type') === 'ewallet' ? __('Nomor E-Wallet / HP') : __('Nomor Rekening'))

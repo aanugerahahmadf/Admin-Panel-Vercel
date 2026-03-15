@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -9,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $user_id
  * @property int $package_id
  * @property string $order_number
- * @property numeric $total_price
+ * @property float $total_price
  * @property string $status
  * @property string $payment_status
  * @property \Illuminate\Support\Carbon $booking_date
@@ -17,12 +19,12 @@ use Illuminate\Database\Eloquent\Model;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read mixed $event_date
- * @property-read \App\Models\Payment|null $latestPayment
- * @property-read \App\Models\Package $package
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Payment> $payments
+ * @property-read Payment|null $latestPayment
+ * @property-read Package $package
+ * @property-read Collection<int, Payment> $payments
  * @property-read int|null $payments_count
- * @property-read \App\Models\User $user
- * @property-read \App\Models\WeddingOrganizer|null $weddingOrganizer
+ * @property-read User $user
+ * @property-read WeddingOrganizer|null $weddingOrganizer
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Order newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Order newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Order query()
@@ -35,8 +37,24 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Order wherePaymentStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Order whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Order whereTotalPrice($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Order whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Order whereUserId($value)
+ * @method static \App\Models\Order|null find(mixed $id, array|string $columns = ['*'])
+ * @method static \App\Models\Order findOrFail(mixed $id, array|string $columns = ['*'])
+ * @method static \App\Models\Order|null first(array|string $columns = ['*'])
+ * @method static \App\Models\Order firstOrFail(array|string $columns = ['*'])
+ * @method static \Illuminate\Database\Eloquent\Collection<int, \App\Models\Order> get(array|string $columns = ['*'])
+ * @property int $userId
+ * @property int $packageId
+ * @property string $orderNumber
+ * @property numeric $totalPrice
+ * @property string $paymentStatus
+ * @property \Illuminate\Support\Carbon $bookingDate
+ * @property \Illuminate\Support\Carbon|null $createdAt
+ * @property \Illuminate\Support\Carbon|null $updatedAt
+ * @property-read mixed $eventDate
+ * @property-read int|null $paymentsCount
+ * @property-read bool|null $paymentsExists
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|\App\Models\Order whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|\App\Models\Order whereUserId($value)
  * @mixin \Eloquent
  */
 class Order extends Model
@@ -61,7 +79,7 @@ class Order extends Model
 
     public function getEventDateAttribute()
     {
-        return \Carbon\Carbon::parse($this->booking_date)->format('Y-m-d');
+        return Carbon::parse($this->booking_date)->format('Y-m-d');
     }
 
     public function user()

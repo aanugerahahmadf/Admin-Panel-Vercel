@@ -2,10 +2,15 @@
 
 namespace App\Filament\Resources\WithdrawalResource\Pages;
 
+use App\Filament\Exports\WithdrawalExporter;
 use App\Filament\Resources\WithdrawalResource;
 use Filament\Actions;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 
+/**
+ * @property-read \App\Filament\Resources\WithdrawalResource $resource
+ */
 class ManageWithdrawals extends ManageRecords
 {
     protected static string $resource = WithdrawalResource::class;
@@ -14,7 +19,7 @@ class ManageWithdrawals extends ManageRecords
     {
         return [
             Actions\ExportAction::make()
-                ->exporter(\App\Filament\Exports\WithdrawalExporter::class)
+                ->exporter(WithdrawalExporter::class)
                 ->label(__('Ekspor Data'))
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('success'),
@@ -22,7 +27,7 @@ class ManageWithdrawals extends ManageRecords
                 ->label(__('Tambah Penarikan'))
                 ->icon('heroicon-o-plus')
                 ->successNotification(
-                    \Filament\Notifications\Notification::make()
+                    Notification::make()
                         ->success()
                         ->title(__('Penarikan Ditambahkan'))
                         ->body(__('Data penarikan baru telah berhasil ditambahkan.'))

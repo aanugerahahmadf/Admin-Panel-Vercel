@@ -5,8 +5,12 @@ namespace App\Filament\Resources\PackageResource\Pages;
 use App\Filament\Exports\PackageExporter;
 use App\Filament\Resources\PackageResource;
 use Filament\Actions;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 
+/**
+ * @property-read \App\Filament\Resources\PackageResource $resource
+ */
 class ManagePackages extends ManageRecords
 {
     protected static string $resource = PackageResource::class;
@@ -23,7 +27,7 @@ class ManagePackages extends ManageRecords
                 ->label(__('Tambah Paket'))
                 ->icon('heroicon-o-plus')
                 ->successNotification(
-                    \Filament\Notifications\Notification::make()
+                    Notification::make()
                         ->success()
                         ->title(__('Paket Ditambahkan'))
                         ->body(__('Paket baru telah berhasil ditambahkan.'))

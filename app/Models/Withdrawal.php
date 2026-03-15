@@ -3,21 +3,22 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
  * @property int $user_id
  * @property string $reference_number
- * @property numeric $amount
+ * @property float $amount
  * @property string $bank_name
  * @property string $account_number
  * @property string $account_holder
  * @property string $status
  * @property string|null $notes
  * @property string|null $admin_notes
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\User $user
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read User $user
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal query()
@@ -31,8 +32,21 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal whereNotes($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal whereReferenceNumber($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal whereStatus($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal whereUserId($value)
+ * @method static \App\Models\Withdrawal|null find(mixed $id, array|string $columns = ['*'])
+ * @method static \App\Models\Withdrawal findOrFail(mixed $id, array|string $columns = ['*'])
+ * @method static \App\Models\Withdrawal|null first(array|string $columns = ['*'])
+ * @method static \App\Models\Withdrawal firstOrFail(array|string $columns = ['*'])
+ * @method static \Illuminate\Database\Eloquent\Collection<int, \App\Models\Withdrawal> get(array|string $columns = ['*'])
+ * @property int $userId
+ * @property string $referenceNumber
+ * @property string $bankName
+ * @property string $accountNumber
+ * @property string $accountHolder
+ * @property string|null $adminNotes
+ * @property \Illuminate\Support\Carbon|null $createdAt
+ * @property \Illuminate\Support\Carbon|null $updatedAt
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|\App\Models\Withdrawal whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|\App\Models\Withdrawal whereUserId($value)
  * @mixin \Eloquent
  */
 class Withdrawal extends Model

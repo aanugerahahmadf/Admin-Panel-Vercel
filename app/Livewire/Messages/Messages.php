@@ -2,26 +2,31 @@
 
 namespace App\Livewire\Messages;
 
+use App\Enums\Messages\MediaCollectionType;
+use App\Livewire\Traits\CanMarkAsRead;
+use App\Livewire\Traits\CanValidateFiles;
+use App\Livewire\Traits\HasPollInterval;
 use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
+use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use App\Enums\Messages\MediaCollectionType;
-use App\Livewire\Traits\CanMarkAsRead;
-use App\Livewire\Traits\CanValidateFiles;
-use App\Livewire\Traits\HasPollInterval;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithPagination;
 
+/**
+ * @mixin \Livewire\Component
+ */
 class Messages extends Component implements HasForms
 {
     use CanMarkAsRead, CanValidateFiles, HasPollInterval, InteractsWithForms, WithPagination;
@@ -49,12 +54,16 @@ class Messages extends Component implements HasForms
 
     public function pollMessages(): void
     {
-        $latestId = $this->conversationMessages->pluck('id')->first();
-        $polledMessages = $this->selectedConversation->messages()->where('id', '>', $latestId ?? 0)->latest()->get();
+        $latestId = $this->conversationMessages->pluck('id')->first(['*']);
+
+        /** @var Builder $query */
+        $query = $this->selectedConversation->messages();
+
+        $polledMessages = $query->where('id', '>', $latestId ?? 0)->latest()->get(['*']);
         if ($polledMessages->isNotEmpty()) {
             $this->conversationMessages = collect([
                 ...$polledMessages,
-                ...$this->conversationMessages
+                ...$this->conversationMessages,
             ]);
         }
     }
@@ -87,7 +96,7 @@ class Messages extends Component implements HasForms
                             ->icon('heroicon-o-paper-clip')
                             ->color('gray')
                             ->tooltip(__('Attach Files'))
-                            ->action(fn () => $this->showUpload = !$this->showUpload),
+                            ->action(fn () => $this->showUpload = ! $this->showUpload),
                     ])->grow(false),
                     Forms\Components\Textarea::make('message')
                         ->live()
@@ -117,7 +126,7 @@ class Messages extends Component implements HasForms
 
                 $this->conversationMessages->prepend($newMessage);
                 collect($rawData['attachments'])->each(function ($attachment) use ($newMessage) {
-                    $newMessage->addMedia($attachment)->usingFileName(Str::slug(config('messages.slug'), '_') . '_' . Str::random(20) .'.'.$attachment->extension())->toMediaCollection(MediaCollectionType::FILAMENT_MESSAGES->value);
+                    $newMessage->addMedia($attachment)->usingFileName(Str::slug(config('messages.slug'), '_').'_'.Str::random(20).'.'.$attachment->extension())->toMediaCollection(MediaCollectionType::FILAMENT_MESSAGES->value);
                 });
 
                 $this->form->fill();
@@ -139,9 +148,12 @@ class Messages extends Component implements HasForms
     }
 
     #[Computed()]
-    public function paginator(): \Illuminate\Contracts\Pagination\Paginator
+    public function paginator(): Paginator
     {
-        return $this->selectedConversation->messages()->latest()->paginate(10, ['*'], 'page', $this->currentPage);
+        /** @var Builder $query */
+        $query = $this->selectedConversation->messages();
+
+        return $query->latest()->paginate(10, ['*'], 'page', $this->currentPage);
     }
 
     public function downloadAttachment(string $filePath, string $fileName)
@@ -152,13 +164,14 @@ class Messages extends Component implements HasForms
     public function validateMessage(): bool
     {
         $rawData = $this->form->getRawState();
-        if (empty($rawData['attachments']) && !$rawData['message']) {
+        if (empty($rawData['attachments']) && ! $rawData['message']) {
             return true;
         }
+
         return false;
     }
 
-    public function render(): Application | Factory | View | \Illuminate\View\View
+    public function render(): Application|Factory|View|\Illuminate\View\View
     {
         return view('livewire.messages.messages');
     }

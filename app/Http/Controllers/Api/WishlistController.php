@@ -3,11 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Wishlist;
 use App\Models\Package;
+use App\Models\Wishlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class WishlistController extends Controller
 {
@@ -20,7 +19,7 @@ class WishlistController extends Controller
             $query = Wishlist::with(['package' => function ($query): void {
                 $query->with(['weddingOrganizer', 'category', 'reviews']);
             }])
-            ->where('user_id', Auth::id());
+                ->where('user_id', Auth::id());
 
             // Apply filters
             if ($request->filled('organizer_id')) {
@@ -69,12 +68,12 @@ class WishlistController extends Controller
 
             $existingWishlist = Wishlist::where('user_id', Auth::id())
                 ->where('package_id', $request->package_id)
-                ->first();
+                ->first(['*']);
 
             if ($existingWishlist) {
                 // Remove from wishlist
                 $existingWishlist->delete();
-                
+
                 return response()->json([
                     'status' => 'success',
                     'message' => 'Removed from wishlist',
@@ -82,8 +81,8 @@ class WishlistController extends Controller
                 ]);
             } else {
                 // Add to wishlist
-                $package = Package::findOrFail($request->package_id);
-                
+                $package = Package::findOrFail($request->package_id, ['*']);
+
                 $wishlist = Wishlist::create([
                     'user_id' => Auth::id(),
                     'package_id' => $package->id,
@@ -145,9 +144,9 @@ class WishlistController extends Controller
             foreach ($request->package_ids as $packageId) {
                 $existing = Wishlist::where('user_id', Auth::id())
                     ->where('package_id', $packageId)
-                    ->first();
+                    ->first(['*']);
 
-                if (!$existing) {
+                if (! $existing) {
                     Wishlist::create([
                         'user_id' => Auth::id(),
                         'package_id' => $packageId,
@@ -182,9 +181,9 @@ class WishlistController extends Controller
         try {
             $wishlist = Wishlist::where('user_id', Auth::id())
                 ->where('package_id', $packageId)
-                ->first();
+                ->first(['*']);
 
-            if (!$wishlist) {
+            if (! $wishlist) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Item not found in wishlist',

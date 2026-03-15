@@ -4,11 +4,19 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PackageResource\Pages;
 use App\Models\Package;
+use App\Models\WeddingOrganizer;
 use Filament\Forms;
+use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * @mixin \Eloquent
+ * @property-read \App\Models\Package $record
+ */
 class PackageResource extends Resource
 {
     protected static ?string $model = Package::class;
@@ -19,13 +27,21 @@ class PackageResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    public static function getModelLabel(): string
+    {
+        return __('Paket');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Paket');
+    }
+
     public static function getGloballySearchableAttributes(): array
     {
         return ['name', 'theme', 'color'];
     }
 
-    
-    
     public static function getNavigationGroup(): ?string
     {
         return __('Studio');
@@ -38,7 +54,10 @@ class PackageResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::$model::count();
+        /** @var Builder $query */
+        $query = static::$model::query();
+
+        return (string) $query->count();
     }
 
     public static function getNavigationBadgeColor(): ?string
@@ -51,7 +70,7 @@ class PackageResource extends Resource
         return __('Total Paket Rias');
     }
 
-    public static function form(\Filament\Forms\Form $form): \Filament\Forms\Form
+    public static function form(Form $form): Form
     {
         return $form
             ->schema([
@@ -61,17 +80,27 @@ class PackageResource extends Resource
                         Forms\Components\Select::make('wedding_organizer_id')
                             ->label(__('Studio'))
                             ->relationship('weddingOrganizer', 'name')
-                            ->default(fn () => \App\Models\WeddingOrganizer::first()?->id)
+                            ->default(function () {
+                                /** @var WeddingOrganizer|null $record */
+                                $record = WeddingOrganizer::first(['*']);
+
+                                return $record ? $record->id : null;
+                            })
                             ->searchable()
                             ->preload()
                             ->required()
-                            ->hidden(fn () => \App\Models\WeddingOrganizer::count() <= 1),
+                            ->hidden(function () {
+                                /** @var Builder $query */
+                                $query = WeddingOrganizer::query();
+
+                                return $query->count() <= 1;
+                            }),
                         Forms\Components\Select::make('category_id')
                             ->label(__('Kategori Rias'))
                             ->relationship('category', 'name')
                             ->searchable()
                             ->preload(),
-                    ])->columns(2),
+                    ])->columns(['sm' => 2]),
 
                 Forms\Components\Section::make(__('Identitas Paket'))
                     ->description(__('Penamaan utama dan detail deskriptif.'))
@@ -83,13 +112,14 @@ class PackageResource extends Resource
                             ->live(onBlur: true)
                             ->afterStateUpdated(fn (Forms\Set $set, ?string $state) => $set('slug', str($state)->slug())),
                         Forms\Components\TextInput::make('slug')
+                            ->label(__('Slug'))
                             ->required()
-                            ->unique(ignorable: fn ($record) => $record)
+                            ->unique(ignorable: fn (?Package $record) => $record)
                             ->maxLength(255),
                         Forms\Components\Textarea::make('description')
                             ->label(__('Deskripsi'))
                             ->columnSpanFull(),
-                    ])->columns(2),
+                    ])->columns(['sm' => 2]),
 
                 Forms\Components\Section::make(__('Harga & Fitur'))
                     ->description(__('Aspek finansial dan fungsional dari layanan.'))
@@ -112,7 +142,7 @@ class PackageResource extends Resource
                             ->label(__('Fitur'))
                             ->placeholder(__('Tambahkan fitur dan tekan enter'))
                             ->columnSpanFull(),
-                    ])->columns(2),
+                    ])->columns(['sm' => 2]),
 
                 Forms\Components\Section::make(__('Tema & Kapasitas'))
                     ->description(__('Estetika visual dan akomodasi tamu.'))
@@ -130,7 +160,7 @@ class PackageResource extends Resource
                             ->label(__('Kapasitas Maksimum'))
                             ->numeric()
                             ->suffix('Pax'),
-                    ])->columns(2),
+                    ])->columns(['sm' => 2]),
 
                 Forms\Components\Section::make(__('Media Paket'))
                     ->description(__('Upload foto utama dan video portfolio paket rias ini.'))
@@ -155,7 +185,7 @@ class PackageResource extends Resource
             ]);
     }
 
-    public static function table(\Filament\Tables\Table $table): \Filament\Tables\Table
+    public static function table(Table $table): Table
     {
         return $table
             ->mobileCards()

@@ -1,11 +1,13 @@
 <?php
 
+use App\Models\Inbox;
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use App\Models\Inbox;
 
-return new class () extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
@@ -15,7 +17,7 @@ return new class () extends Migration {
             $table->id();
             $table->foreignIdFor(Inbox::class);
             $table->text('message')->nullable();
-            $table->foreignIdFor(\App\Models\User::class);
+            $table->foreignIdFor(User::class);
             $table->json('read_by')->nullable();
             $table->json('read_at')->nullable();
             $table->json('notified')->nullable();

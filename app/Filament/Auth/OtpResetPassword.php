@@ -2,16 +2,17 @@
 
 namespace App\Filament\Auth;
 
+use App\Models\User;
+use Filament\Facades\Filament;
+use Filament\Forms\Components\Component;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Form;
+use Filament\Http\Responses\Auth\Contracts\PasswordResetResponse;
+use Filament\Notifications\Notification;
 use Filament\Pages\Auth\PasswordReset\ResetPassword as BaseResetPassword;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
-use Filament\Notifications\Notification;
-use Filament\Facades\Filament;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Component;
-use Filament\Forms\Form;
-use App\Models\User;
-use Illuminate\Contracts\Support\Htmlable;
 
 class OtpResetPassword extends BaseResetPassword
 {
@@ -29,42 +30,44 @@ class OtpResetPassword extends BaseResetPassword
     {
         if (Filament::auth()->check()) {
             redirect()->intended(Filament::getUrl());
+
             return;
         }
 
         $this->email = request()->query('email', '');
-        
+
         $this->form->fill([
             'email' => $this->email,
         ]);
-        
+
         $this->token = 'otp';
     }
 
-    public function resetPassword(): ?\Filament\Http\Responses\Auth\Contracts\PasswordResetResponse
+    public function resetPassword(): ?PasswordResetResponse
     {
         $data = $this->form->getState();
         $email = $data['email'] ?? $this->email;
 
         // Cek apakah OTP sudah diverifikasi di halaman sebelumnya
-        if (!Cache::get('otp_verified_for_' . $email)) {
+        if (! Cache::get('otp_verified_for_'.$email)) {
             Notification::make()
                 ->title(__('Sesi verifikasi habis. Silakan verifikasi ulang OTP Anda.'))
                 ->danger()
                 ->send();
-            
-            $this->redirect(\App\Filament\Auth\VerifyOtp::getUrl(['email' => $email]));
+
+            $this->redirect(VerifyOtp::getUrl(['email' => $email]));
+
             return null;
         }
 
-        $user = User::where('email', $email)->first();
-        
+        $user = User::where('email', $email)->first(['*']);
+
         if ($user) {
             $user->password = Hash::make($data['password']);
             $user->save();
 
-            Cache::forget('otp_verified_for_' . $email);
-            Cache::forget('password_reset_otp_' . $email);
+            Cache::forget('otp_verified_for_'.$email);
+            Cache::forget('password_reset_otp_'.$email);
 
             Notification::make()
                 ->title(__('Kata sandi berhasil diatur ulang.'))
@@ -72,12 +75,14 @@ class OtpResetPassword extends BaseResetPassword
                 ->send();
 
             $this->redirect(Filament::getLoginUrl());
+
             return null;
         } else {
             Notification::make()
                 ->title(__('Pengguna tidak ditemukan.'))
                 ->danger()
                 ->send();
+
             return null;
         }
     }
@@ -91,7 +96,7 @@ class OtpResetPassword extends BaseResetPassword
                 $this->getPasswordConfirmationFormComponent(),
             ]);
     }
-    
+
     protected function getEmailFormComponent(): Component
     {
         return TextInput::make('email')

@@ -35,7 +35,7 @@ return [
         ],
     ],
 
-    'ai_core_url'  => env('AI_CORE_URL', 'http://127.0.0.1:5000'),
+    'ai_core_url' => env('AI_CORE_URL', 'http://127.0.0.1:5000'),
     'cbir_api_url' => env('CBIR_API_URL', 'http://127.0.0.1:5000'),
 
 ];

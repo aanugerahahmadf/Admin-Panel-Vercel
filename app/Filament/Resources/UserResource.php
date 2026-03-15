@@ -10,8 +10,13 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Hash;
 
+/**
+ * @mixin \Eloquent
+ * @property-read \App\Models\User $record
+ */
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
@@ -20,7 +25,6 @@ class UserResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
-    
     public static function getNavigationGroup(): ?string
     {
         return __('Pengguna');
@@ -31,19 +35,22 @@ class UserResource extends Resource
         return __('Pengguna');
     }
 
-    public static function getPluralLabel(): ?string
+    public static function getModelLabel(): string
     {
         return __('Pengguna');
     }
 
-    public static function getModelLabel(): string
+    public static function getPluralModelLabel(): string
     {
         return __('Pengguna');
     }
 
     public static function getNavigationBadge(): ?string
     {
-        return static::$model::count();
+        /** @var Builder $query */
+        $query = static::$model::query();
+
+        return (string) $query->count();
     }
 
     public static function getNavigationBadgeColor(): ?string
@@ -56,7 +63,7 @@ class UserResource extends Resource
         return __('Total Pengguna Terdaftar');
     }
 
-        public static function form(\Filament\Forms\Form $form): \Filament\Forms\Form
+    public static function form(Form $form): Form
     {
         return $form
             ->schema([
@@ -121,9 +128,9 @@ class UserResource extends Resource
                             ->label(__('Status Aktif'))
                             ->required()
                             ->default(true)
-                            ->disabled(fn ($record) => $record && $record->hasRole('super_admin'))
+                            ->disabled(fn (?User $record) => $record?->hasRole('super_admin') ?? false)
                             ->helperText(__('Super admin tidak dapat dinonaktifkan demi alasan keamanan.')),
-                    ])->columns(2),
+                    ])->columns(['sm' => 2]),
             ]);
     }
 
@@ -177,8 +184,7 @@ class UserResource extends Resource
 
                 Tables\Columns\ToggleColumn::make('active_status')
                     ->label(__('Status Aktif'))
-                    ->searchable()
-                    ->disabled(fn ($record) => $record->hasRole('super_admin'))
+                    ->disabled(fn (?User $record) => $record?->hasRole('super_admin') ?? false)
                     ->alignment('center')
                     ->afterStateUpdated(function ($record, $state): void {
                         if (! $state) {

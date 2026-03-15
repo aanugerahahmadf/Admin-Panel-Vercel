@@ -1,5 +1,7 @@
 <?php
 
+use Filament\Support\Enums\MaxWidth;
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -105,7 +107,7 @@ return [
     | You can use any enum value from \Filament\Support\Enums\MaxWidth.
     |
     */
-    'max_content_width' => \Filament\Support\Enums\MaxWidth::Full,
+    'max_content_width' => MaxWidth::Full,
 
     /*
     |--------------------------------------------------------------------------

@@ -5,10 +5,17 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\WeddingOrganizerResource\Pages;
 use App\Models\WeddingOrganizer;
 use Filament\Forms;
+use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * @mixin \Eloquent
+ * @property-read \App\Models\WeddingOrganizer $record
+ */
 class WeddingOrganizerResource extends Resource
 {
     protected static ?string $model = WeddingOrganizer::class;
@@ -19,13 +26,21 @@ class WeddingOrganizerResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    public static function getModelLabel(): string
+    {
+        return __('Profil Studio');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Profil Studio');
+    }
+
     public static function getGloballySearchableAttributes(): array
     {
         return ['name'];
     }
 
-    
-    
     public static function getNavigationGroup(): ?string
     {
         return __('Studio');
@@ -38,7 +53,10 @@ class WeddingOrganizerResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::$model::count();
+        /** @var Builder $query */
+        $query = static::$model::query();
+
+        return (string) $query->count();
     }
 
     public static function getNavigationBadgeColor(): ?string
@@ -51,7 +69,7 @@ class WeddingOrganizerResource extends Resource
         return __('Profil WO Aktif');
     }
 
-    public static function form(\Filament\Forms\Form $form): \Filament\Forms\Form
+    public static function form(Form $form): Form
     {
         return $form
             ->schema([
@@ -66,8 +84,9 @@ class WeddingOrganizerResource extends Resource
                             ->live(onBlur: true)
                             ->afterStateUpdated(fn (Forms\Set $set, ?string $state) => $set('slug', str($state)->slug())),
                         Forms\Components\TextInput::make('slug')
+                            ->label(__('Slug'))
                             ->required()
-                            ->unique(ignorable: fn ($record) => $record)
+                            ->unique(ignorable: fn (?WeddingOrganizer $record) => $record)
                             ->maxLength(255)
                             ->default('devi-makeup-wedding'),
                         Forms\Components\SpatieMediaLibraryFileUpload::make('gallery')
@@ -81,7 +100,7 @@ class WeddingOrganizerResource extends Resource
                             ->label(__('Deskripsi Studio'))
                             ->default('Artis rias pengantin profesional yang mengkhususkan diri dalam gaya pernikahan tradisional dan modern.')
                             ->columnSpanFull(),
-                    ])->columns(2),
+                    ])->columns(['sm' => 2]),
 
                 Forms\Components\Section::make(__('Kontak & Lokasi'))
                     ->description(__('Informasi kontak studio dan detail lokasi.'))
@@ -95,7 +114,7 @@ class WeddingOrganizerResource extends Resource
                                 ->maxLength(255),
                             Forms\Components\TextInput::make('longitude')
                                 ->maxLength(255),
-                        ])->columns(2),
+                        ])->columns(['sm' => 2]),
                         Forms\Components\TextInput::make('rating')
                             ->label(__('Rating'))
                             ->required()
@@ -108,7 +127,7 @@ class WeddingOrganizerResource extends Resource
                             ->required()
                             ->default(true)
                             ->inline(false),
-                    ])->columns(2),
+                    ])->columns(['sm' => 2]),
 
                 Forms\Components\Section::make(__('Video Profil Studio'))
                     ->description(__('Upload video perkenalan studio untuk ditampilkan di halaman profil.'))
@@ -126,7 +145,7 @@ class WeddingOrganizerResource extends Resource
             ]);
     }
 
-    public static function table(\Filament\Tables\Table $table): \Filament\Tables\Table
+    public static function table(Table $table): Table
     {
         return $table
             ->mobileCards()
@@ -159,7 +178,6 @@ class WeddingOrganizerResource extends Resource
                 Tables\Columns\IconColumn::make('is_verified')
                     ->label(__('Terverifikasi'))
                     ->boolean()
-                    ->searchable()
                     ->alignment('center'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label(__('Terdaftar Pada'))

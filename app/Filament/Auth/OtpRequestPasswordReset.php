@@ -2,16 +2,15 @@
 
 namespace App\Filament\Auth;
 
-use Filament\Pages\Auth\PasswordReset\RequestPasswordReset as BaseRequestPasswordReset;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Mail;
-use Filament\Facades\Filament;
-use Filament\Notifications\Notification;
 use App\Models\User;
-use Filament\Forms\Form;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Component;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
+use Filament\Pages\Auth\PasswordReset\RequestPasswordReset as BaseRequestPasswordReset;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class OtpRequestPasswordReset extends BaseRequestPasswordReset
 {
@@ -30,12 +29,12 @@ class OtpRequestPasswordReset extends BaseRequestPasswordReset
         $data = $this->form->getState();
         $email = $data['email'];
 
-        $user = User::where('email', $email)->first();
+        $user = User::where('email', $email)->first(['*']);
 
         // Send OTP via email using Cache
         if ($user) {
             $otp = random_int(100000, 999999);
-            Cache::put('password_reset_otp_' . $email, $otp, now()->addMinutes(15));
+            Cache::put('password_reset_otp_'.$email, $otp, now()->addMinutes(15));
 
             try {
                 Mail::send('emails.otp', [
@@ -46,7 +45,7 @@ class OtpRequestPasswordReset extends BaseRequestPasswordReset
                     $message->to($email)->subject(__('Kode Atur Ulang Kata Sandi'));
                 });
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error("Gagal kirim email OTP ke $email: " . $e->getMessage());
+                Log::error("Gagal kirim email OTP ke $email: ".$e->getMessage());
                 // Tetap lanjut biar user nggak stuck di error page, walau email gagal kirim
             }
         }
@@ -57,7 +56,7 @@ class OtpRequestPasswordReset extends BaseRequestPasswordReset
             ->send();
 
         // Redirect ke halaman Verifikasi OTP dulu
-        $this->redirect(\App\Filament\Auth\VerifyOtp::getUrl([
+        $this->redirect(VerifyOtp::getUrl([
             'email' => $email,
         ]));
     }

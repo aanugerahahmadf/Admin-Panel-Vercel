@@ -8,9 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\ValidationException;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class ProfileController extends Controller
 {
@@ -20,10 +19,10 @@ class ProfileController extends Controller
     public function show()
     {
         try {
-            /** @var \App\Models\User $user */
+            /** @var User $user */
             $user = Auth::user();
-            
-            if (!$user) {
+
+            if (! $user) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'User not authenticated',
@@ -54,10 +53,10 @@ class ProfileController extends Controller
     public function update(Request $request)
     {
         try {
-            /** @var \App\Models\User $user */
+            /** @var User $user */
             $user = Auth::user();
 
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'User not authenticated',
@@ -72,7 +71,7 @@ class ProfileController extends Controller
                     'nullable',
                     'string',
                     'max:100',
-                    Rule::unique('users')->ignore($user->id)
+                    Rule::unique('users')->ignore($user->id),
                 ],
                 'phone' => 'nullable|string|max:20',
                 'address' => 'nullable|string|max:500',
@@ -88,7 +87,7 @@ class ProfileController extends Controller
                     'nullable',
                     'email',
                     'max:255',
-                    Rule::unique('users')->ignore($user->id)
+                    Rule::unique('users')->ignore($user->id),
                 ],
             ]);
 
@@ -120,10 +119,10 @@ class ProfileController extends Controller
     public function updateAvatar(Request $request)
     {
         try {
-            /** @var \App\Models\User $user */
+            /** @var User $user */
             $user = Auth::user();
 
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'User not authenticated',
@@ -140,7 +139,7 @@ class ProfileController extends Controller
             }
 
             // Store new avatar with unique name
-            $fileName = 'avatar_' . $user->id . '_' . time() . '.' . $request->file('avatar')->getClientOriginalExtension();
+            $fileName = 'avatar_'.$user->id.'_'.time().'.'.$request->file('avatar')->getClientOriginalExtension();
             $path = $request->file('avatar')->storeAs('avatars', $fileName, 'public');
 
             $user->update(['avatar_url' => $path]);
@@ -179,17 +178,17 @@ class ProfileController extends Controller
                 'new_password' => 'required|string|min:8|confirmed',
             ]);
 
-            /** @var \App\Models\User $user */
+            /** @var User $user */
             $user = Auth::user();
 
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'User not authenticated',
                 ], 401);
             }
 
-            if (!Hash::check($request->current_password, $user->password)) {
+            if (! Hash::check($request->current_password, $user->password)) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Current password is incorrect',
@@ -225,10 +224,10 @@ class ProfileController extends Controller
     public function dashboard()
     {
         try {
-            /** @var \App\Models\User $user */
+            /** @var User $user */
             $user = Auth::user();
 
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'User not authenticated',
@@ -258,16 +257,16 @@ class ProfileController extends Controller
                     ->whereNotIn('status', ['cancelled', 'completed'])
                     ->orderBy('booking_date')
                     ->limit(5)
-                    ->get(),
+                    ->get(['*']),
                 'recent_orders' => $user->orders()
                     ->with(['package.weddingOrganizer'])
                     ->latest()
                     ->limit(5)
-                    ->get(),
+                    ->get(['*']),
                 'recent_activity' => $user->notifications()
                     ->latest()
                     ->limit(5)
-                    ->get(),
+                    ->get(['*']),
             ];
 
             return response()->json([
@@ -289,10 +288,10 @@ class ProfileController extends Controller
     public function getOrderHistory(Request $request)
     {
         try {
-            /** @var \App\Models\User $user */
+            /** @var User $user */
             $user = Auth::user();
 
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'User not authenticated',
@@ -319,12 +318,12 @@ class ProfileController extends Controller
             $sortDirection = $request->get('sort_direction', 'desc');
 
             $allowedSortFields = ['created_at', 'booking_date', 'total_price', 'status'];
-            if (!in_array($sortBy, $allowedSortFields)) {
+            if (! in_array($sortBy, $allowedSortFields)) {
                 $sortBy = 'created_at';
             }
 
             $allowedDirections = ['asc', 'desc'];
-            if (!in_array(strtolower($sortDirection), $allowedDirections)) {
+            if (! in_array(strtolower($sortDirection), $allowedDirections)) {
                 $sortDirection = 'desc';
             }
 
@@ -358,10 +357,10 @@ class ProfileController extends Controller
     public function getWishlist(Request $request)
     {
         try {
-            /** @var \App\Models\User $user */
+            /** @var User $user */
             $user = Auth::user();
 
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'User not authenticated',
@@ -375,12 +374,12 @@ class ProfileController extends Controller
             $sortDirection = $request->get('sort_direction', 'desc');
 
             $allowedSortFields = ['created_at', 'package.name', 'package.price'];
-            if (!in_array($sortBy, $allowedSortFields)) {
+            if (! in_array($sortBy, $allowedSortFields)) {
                 $sortBy = 'created_at';
             }
 
             $allowedDirections = ['asc', 'desc'];
-            if (!in_array(strtolower($sortDirection), $allowedDirections)) {
+            if (! in_array(strtolower($sortDirection), $allowedDirections)) {
                 $sortDirection = 'desc';
             }
 

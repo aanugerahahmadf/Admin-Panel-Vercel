@@ -3,8 +3,8 @@
 use App\Http\Controllers\Api\AppSettingsController;
 use App\Http\Controllers\Api\ArticleController;
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\CBIRController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\CBIRController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\OrderController;
@@ -124,7 +124,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/bookings/track/{orderNumber}', [OrderController::class, 'trackOrder']);
     Route::get('/bookings/{id}', [OrderController::class, 'show']);
     Route::post('/bookings/{id}/cancel', [OrderController::class, 'cancelOrder']);
-    
+
     Route::get('/orders', [OrderController::class, 'getOrders']);
     Route::post('/orders', [OrderController::class, 'createOrder']);
     Route::post('/orders/{id}/pay', [OrderController::class, 'processPayment']);

@@ -5,8 +5,12 @@ namespace App\Filament\Resources\ReviewResource\Pages;
 use App\Filament\Exports\ReviewExporter;
 use App\Filament\Resources\ReviewResource;
 use Filament\Actions;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 
+/**
+ * @property-read \App\Filament\Resources\ReviewResource $resource
+ */
 class ManageReviews extends ManageRecords
 {
     protected static string $resource = ReviewResource::class;
@@ -23,7 +27,7 @@ class ManageReviews extends ManageRecords
                 ->label(__('Tambah Review'))
                 ->icon('heroicon-o-plus')
                 ->successNotification(
-                    \Filament\Notifications\Notification::make()
+                    Notification::make()
                         ->success()
                         ->title(__('Review Ditambahkan'))
                         ->body(__('Review baru telah berhasil ditambahkan.'))

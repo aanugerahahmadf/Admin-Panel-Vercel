@@ -5,15 +5,20 @@ namespace App\Filament\Resources;
 use App\Filament\Exports\PaymentExporter;
 use App\Filament\Resources\PaymentResource\Pages;
 use App\Models\Payment;
+use App\Models\PaymentMethod;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Actions\ExportAction;
 use Filament\Tables\Actions\ExportBulkAction;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * @mixin \Eloquent
+ * @property-read \App\Models\Payment $record
+ */
 class PaymentResource extends Resource
 {
     protected static ?string $model = Payment::class;
@@ -24,13 +29,21 @@ class PaymentResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'payment_number';
 
+    public static function getModelLabel(): string
+    {
+        return __('Pembayaran');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Pembayaran');
+    }
+
     public static function getGloballySearchableAttributes(): array
     {
         return ['payment_number'];
     }
 
-    
-    
     public static function getNavigationGroup(): ?string
     {
         return __('Transaksi');
@@ -43,7 +56,10 @@ class PaymentResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::$model::count();
+        /** @var Builder $query */
+        $query = static::$model::query();
+
+        return (string) $query->count();
     }
 
     public static function getNavigationBadgeColor(): ?string
@@ -75,17 +91,21 @@ class PaymentResource extends Resource
                             ->maxLength(255),
                         Forms\Components\Select::make('payment_method')
                             ->label(__('Metode Pembayaran'))
-                            ->relationship('methodDetails', 'name', fn ($query) => $query->where('is_active', true))
+                            ->relationship('methodDetails', 'name', function (Builder $query) {
+                                $query->where('is_active', true);
+                            })
                             ->searchable()
                             ->preload()
                             ->required()
                             ->reactive()
                             ->afterStateUpdated(function (Forms\Get $get, Forms\Set $set, $state): void {
                                 if ($state && $get('amount')) {
-                                    $method = \App\Models\PaymentMethod::where('code', $state)->first();
-                                    $fee = $method ? floatval($method->fee) : 0;
+                                    /** @var PaymentMethod|null $method */
+                                    $method = PaymentMethod::where('code', $state)->first(['*']);
+
+                                    $fee = floatval($method?->fee ?? 0);
                                     $set('admin_fee', $fee);
-                                    $set('total_amount', floatval($get('amount')) + $fee);
+                                    $set('total_amount', floatval($get('amount') ?? 0) + $fee);
                                 }
                             }),
                         Forms\Components\Select::make('status')
@@ -93,7 +113,7 @@ class PaymentResource extends Resource
                             ->options(Payment::statusLabels())
                             ->searchable()
                             ->required(),
-                    ])->columns(2),
+                    ])->columns(['sm' => 2]),
 
                 Forms\Components\Section::make(__('Detail Keuangan'))
                     ->description(__('Harga dan pelacakan pembayaran untuk transaksi ini.'))
@@ -107,12 +127,14 @@ class PaymentResource extends Resource
                             ->afterStateUpdated(function (Forms\Get $get, Forms\Set $set, $state): void {
                                 $methodCode = $get('payment_method');
                                 if ($methodCode) {
-                                    $method = \App\Models\PaymentMethod::where('code', $methodCode)->first();
-                                    $fee = $method ? floatval($method->fee) : 0;
+                                    /** @var PaymentMethod|null $method */
+                                    $method = PaymentMethod::where('code', $methodCode)->first(['*']);
+
+                                    $fee = floatval($method?->fee ?? 0);
                                     $set('admin_fee', $fee);
-                                    $set('total_amount', floatval($state) + $fee);
+                                    $set('total_amount', floatval($state ?? 0) + $fee);
                                 } else {
-                                    $set('total_amount', floatval($state) + floatval($get('admin_fee') ?? 0));
+                                    $set('total_amount', floatval($state ?? 0) + floatval($get('admin_fee') ?? 0));
                                 }
                             }),
                         Forms\Components\TextInput::make('admin_fee')
@@ -128,7 +150,7 @@ class PaymentResource extends Resource
                             ->numeric()
                             ->prefix('Rp')
                             ->readOnly(),
-                    ])->columns(3),
+                    ])->columns(['sm' => 3]),
 
                 Forms\Components\Section::make(__('Bukti Pembayaran'))
                     ->description(__('Foto struk atau bukti transfer dari user.'))
@@ -138,7 +160,7 @@ class PaymentResource extends Resource
                             ->image()
                             ->directory('payment-proofs')
                             ->visibility('public')
-                            ->columnSpan('full'),
+                            ->columnSpanFull(),
                     ]),
 
                 Forms\Components\Section::make(__('Kecerdasan Buatan (AI Scan)'))
@@ -146,7 +168,7 @@ class PaymentResource extends Resource
                     ->schema([
                         Forms\Components\Placeholder::make('ai_status')
                             ->label(__('Status Scan AI'))
-                            ->content(fn ($record) => $record?->metadata['ai_analysis']['is_verified_by_ai'] ?? false ? '✅ ' . __('Valid (Terverifikasi Otomatis)') : '⏳ ' . __('Belum di-scan/Manual')),
+                            ->content(fn (?Payment $record) => $record?->metadata['ai_analysis']['is_verified_by_ai'] ?? false ? '✅ '.__('Valid (Terverifikasi Otomatis)') : '⏳ '.__('Belum di-scan/Manual')),
                         Forms\Components\KeyValue::make('metadata.ai_analysis')
                             ->label(__('Detail Analisa AI'))
                             ->keyLabel(__('Atribut'))
@@ -154,7 +176,7 @@ class PaymentResource extends Resource
                             ->columnSpan('full'),
                     ])
                     ->collapsed()
-                    ->visible(fn ($record) => isset($record->metadata['ai_analysis'])),
+                    ->visible(fn (?Payment $record) => isset($record?->metadata['ai_analysis'])),
 
                 Forms\Components\Section::make(__('Waktu'))
                     ->description(__('Tanggal penting untuk pembayaran ini.'))
@@ -165,7 +187,7 @@ class PaymentResource extends Resource
                             ->label(__('Kadaluarsa Pada')),
                         Forms\Components\DateTimePicker::make('cancelled_at')
                             ->label(__('Dibatalkan Pada')),
-                    ])->columns(3),
+                    ])->columns(['sm' => 3]),
 
                 Forms\Components\Section::make(__('Catatan Tambahan'))
                     ->description(__('Informasi atau keterangan tambahan.'))
@@ -181,7 +203,7 @@ class PaymentResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('order.user.name')
+                Tables\Columns\TextColumn::make('order.user.full_name')
                     ->label(__('Pelanggan'))
                     ->searchable(),
                 Tables\Columns\TextColumn::make('payment_number')
@@ -216,7 +238,7 @@ class PaymentResource extends Resource
                     ->falseIcon('heroicon-o-user')
                     ->trueColor('success')
                     ->falseColor('gray')
-                    ->tooltip(fn ($state) => $state ? __('Diverifikasi oleh AI') : __('Verifikasi Manual/Belum Scan'))
+                    ->tooltip(fn ($state) => (bool) $state ? __('Diverifikasi oleh AI') : __('Verifikasi Manual/Belum Scan'))
                     ->alignment('center'),
 
                 Tables\Columns\ImageColumn::make('payment_proof')

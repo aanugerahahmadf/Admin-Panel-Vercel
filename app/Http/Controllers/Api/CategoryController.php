@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
-use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
@@ -19,8 +19,8 @@ class CategoryController extends Controller
 
             // Apply search filter if provided
             if ($request->filled('search')) {
-                $query->where('name', 'like', '%' . $request->search . '%')
-                      ->orWhere('description', 'like', '%' . $request->search . '%');
+                $query->where('name', 'like', '%'.$request->search.'%')
+                    ->orWhere('description', 'like', '%'.$request->search.'%');
             }
 
             // Apply sorting
@@ -29,19 +29,19 @@ class CategoryController extends Controller
 
             // Validate sort parameters to prevent injection
             $allowedSortFields = ['name', 'created_at', 'packages_count'];
-            if (!in_array($sortBy, $allowedSortFields)) {
+            if (! in_array($sortBy, $allowedSortFields)) {
                 $sortBy = 'name';
             }
 
             $allowedDirections = ['asc', 'desc'];
-            if (!in_array(strtolower($sortDirection), $allowedDirections)) {
+            if (! in_array(strtolower($sortDirection), $allowedDirections)) {
                 $sortDirection = 'asc';
             }
 
             $query->orderBy($sortBy, $sortDirection);
 
             // Paginate results
-            $categories = $query->paginate($request->get('per_page', 10));
+            $categories = $query->paginate($request->get('per_page', 10), ['*']);
 
             return response()->json([
                 'status' => 'success',
@@ -71,7 +71,7 @@ class CategoryController extends Controller
         try {
             $category = Category::with(['packages' => function ($query): void {
                 $query->with(['weddingOrganizer', 'reviews'])->limit(10);
-            }, 'packagesCount'])->findOrFail($id);
+            }, 'packagesCount'])->findOrFail($id, ['*']);
 
             return response()->json([
                 'status' => 'success',
@@ -99,9 +99,9 @@ class CategoryController extends Controller
         try {
             $categories = Category::with(['packages' => function ($query) use ($request): void {
                 $query->with(['weddingOrganizer', 'reviews'])
-                      ->orderBy('price', 'asc')
-                      ->limit($request->get('packages_per_category', 5));
-            }, 'packagesCount'])->get();
+                    ->orderBy('price', 'asc')
+                    ->limit($request->get('packages_per_category', 5));
+            }, 'packagesCount'])->get(['*']);
 
             return response()->json([
                 'status' => 'success',

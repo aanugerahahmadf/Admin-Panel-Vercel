@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -17,7 +18,7 @@ class CBIRService
     public function searchByImage($imageFile, $topK = 10)
     {
         try {
-            /** @var \Illuminate\Http\Client\Response $response */
+            /** @var Response $response */
             $response = Http::attach(
                 'image',
                 file_get_contents($imageFile->getRealPath()),

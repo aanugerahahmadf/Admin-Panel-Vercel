@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\UserLanguage;
 use Filament\Notifications\Notification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
-use App\Models\UserLanguage;
 
 class LanguageSwitcherController
 {
@@ -23,7 +23,7 @@ class LanguageSwitcherController
         $modelId = $request->get('model_id');
 
         // Menggunakan ORM untuk mencari model target secara dinamis
-        $targetModel = $modelClass::findOrFail($modelId);
+        $targetModel = $modelClass::findOrFail($modelId, ['*']);
 
         // Jika tabel model memiliki kolom 'lang', update langsung (Eloquent Way)
         if (Schema::hasColumn($targetModel->getTable(), 'lang')) {
@@ -33,7 +33,7 @@ class LanguageSwitcherController
             UserLanguage::updateOrCreate(
                 [
                     'model_type' => $targetModel->getMorphClass(),
-                    'model_id'   => $modelId,
+                    'model_id' => $modelId,
                 ],
                 ['lang' => $lang]
             );
@@ -52,4 +52,3 @@ class LanguageSwitcherController
         return redirect()->to(config('filament-language-switcher.redirect'));
     }
 }
-

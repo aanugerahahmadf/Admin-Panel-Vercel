@@ -9,8 +9,13 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * @mixin \Eloquent
+ * @property-read \App\Models\Topup $record
+ */
 class TopupResource extends Resource
 {
     protected static ?string $model = Topup::class;
@@ -18,6 +23,16 @@ class TopupResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-credit-card';
 
     protected static ?int $navigationSort = 6;
+
+    public static function getModelLabel(): string
+    {
+        return __('Topup');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Topup');
+    }
 
     public static function getNavigationGroup(): ?string
     {
@@ -31,7 +46,10 @@ class TopupResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::$model::count();
+        /** @var Builder $query */
+        $query = static::$model::query();
+
+        return (string) $query->count();
     }
 
     public static function getNavigationBadgeColor(): ?string
@@ -44,7 +62,7 @@ class TopupResource extends Resource
         return __('Total Topup Saldo');
     }
 
-    public static function form(\Filament\Forms\Form $form): \Filament\Forms\Form
+    public static function form(Form $form): Form
     {
         return $form
             ->schema([
@@ -99,7 +117,7 @@ class TopupResource extends Resource
             ]);
     }
 
-    public static function table(\Filament\Tables\Table $table): \Filament\Tables\Table
+    public static function table(Table $table): Table
     {
         return $table
             ->columns([

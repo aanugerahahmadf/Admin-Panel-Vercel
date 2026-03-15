@@ -5,8 +5,12 @@ namespace App\Filament\Resources\BannerResource\Pages;
 use App\Filament\Exports\BannerExporter;
 use App\Filament\Resources\BannerResource;
 use Filament\Actions;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 
+/**
+ * @property-read \App\Filament\Resources\BannerResource $resource
+ */
 class ManageBanners extends ManageRecords
 {
     protected static string $resource = BannerResource::class;
@@ -23,7 +27,7 @@ class ManageBanners extends ManageRecords
                 ->label(__('Tambah Banner'))
                 ->icon('heroicon-o-plus')
                 ->successNotification(
-                    \Filament\Notifications\Notification::make()
+                    Notification::make()
                         ->success()
                         ->title(__('Banner Ditambahkan'))
                         ->body(__('Banner baru telah berhasil ditambahkan.'))

@@ -4,6 +4,9 @@ namespace App\Filament\Widgets;
 
 use App\Models\Order;
 use Filament\Widgets\ChartWidget;
+use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 class RevenueChart extends ChartWidget
 {
@@ -11,9 +14,7 @@ class RevenueChart extends ChartWidget
 
     protected static ?int $sort = 2;
 
-
-    
-    public function getHeading(): string|\Illuminate\Contracts\Support\Htmlable
+    public function getHeading(): string|Htmlable
     {
         return __('Tren Pendapatan');
     }
@@ -21,10 +22,13 @@ class RevenueChart extends ChartWidget
     protected function getData(): array
     {
         // Deteksi cerdas: Gunakan sintaks spesifik database
-        $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
+        $driver = DB::connection()->getDriverName();
         $monthExpr = $driver === 'sqlite' ? 'strftime("%m", created_at)' : 'MONTH(created_at)';
 
-        $data = Order::where('payment_status', 'paid')
+        /** @var Builder $query */
+        $query = Order::query();
+
+        $data = $query->where('payment_status', 'paid')
             ->selectRaw("{$monthExpr} as month, SUM(total_price) as sum")
             ->where('created_at', '>=', now()->subMonths(6))
             ->groupBy('month')

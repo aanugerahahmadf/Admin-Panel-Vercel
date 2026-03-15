@@ -88,6 +88,7 @@ class AuthController extends Controller
         // Check if user is active
         if ($user->active_status === false) {
             Auth::logout();
+
             return response()->json([
                 'status' => 'error',
                 'message' => 'Akun Anda telah dinonaktifkan oleh admin.',
@@ -95,7 +96,7 @@ class AuthController extends Controller
         }
 
         // Ensure user is active on login
-        if (!$user->active_status) {
+        if (! $user->active_status) {
             $user->update(['active_status' => true]);
         }
 
@@ -126,7 +127,7 @@ class AuthController extends Controller
             'email' => 'required|email',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $request->email)->first(['*']);
 
         if (! $user) {
             return response()->json(['status' => 'error', 'message' => 'Email tidak terdaftar.'], 404);
@@ -148,7 +149,7 @@ class AuthController extends Controller
             'password' => 'required|confirmed|min:8',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $request->email)->first(['*']);
         if (! $user) {
             return response()->json(['status' => 'error', 'message' => 'User not found'], 404);
         }
@@ -175,7 +176,7 @@ class AuthController extends Controller
             'message' => 'Social login successful (simulated)',
             'data' => [
                 'token' => 'SOCIAL-TOKEN-'.Str::random(40),
-                'user' => Auth::user() ?: User::first(), // Fallback for simulation
+                'user' => Auth::user() ?: User::first(['*']), // Fallback for simulation
             ],
         ]);
     }

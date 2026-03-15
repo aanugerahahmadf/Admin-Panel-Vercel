@@ -2,10 +2,15 @@
 
 namespace App\Filament\Resources\WishlistResource\Pages;
 
+use App\Filament\Exports\WishlistExporter;
 use App\Filament\Resources\WishlistResource;
 use Filament\Actions;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 
+/**
+ * @property-read \App\Filament\Resources\WishlistResource $resource
+ */
 class ManageWishlists extends ManageRecords
 {
     protected static string $resource = WishlistResource::class;
@@ -14,7 +19,7 @@ class ManageWishlists extends ManageRecords
     {
         return [
             Actions\ExportAction::make()
-                ->exporter(\App\Filament\Exports\WishlistExporter::class)
+                ->exporter(WishlistExporter::class)
                 ->label(__('Ekspor Data'))
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('success'),
@@ -22,7 +27,7 @@ class ManageWishlists extends ManageRecords
                 ->label(__('Tambah Wishlist'))
                 ->icon('heroicon-o-plus')
                 ->successNotification(
-                    \Filament\Notifications\Notification::make()
+                    Notification::make()
                         ->success()
                         ->title(__('Wishlist Ditambahkan'))
                         ->body(__('Wishlist baru telah berhasil ditambahkan.'))

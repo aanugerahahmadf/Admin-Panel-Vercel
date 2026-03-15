@@ -11,7 +11,12 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * @mixin \Eloquent
+ * @property-read \App\Models\Review $record
+ */
 class ReviewResource extends Resource
 {
     protected static ?string $model = Review::class;
@@ -22,13 +27,21 @@ class ReviewResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'comment';
 
+    public static function getModelLabel(): string
+    {
+        return __('Ulasan');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Ulasan');
+    }
+
     public static function getGloballySearchableAttributes(): array
     {
         return ['comment'];
     }
 
-    
-    
     public static function getNavigationGroup(): ?string
     {
         return __('Blog & Media');
@@ -41,7 +54,10 @@ class ReviewResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::$model::count();
+        /** @var Builder $query */
+        $query = static::$model::query();
+
+        return (string) $query->count();
     }
 
     public static function getNavigationBadgeColor(): ?string
@@ -54,7 +70,7 @@ class ReviewResource extends Resource
         return __('Total Ulasan Pelanggan');
     }
 
-    public static function form(\Filament\Forms\Form $form): \Filament\Forms\Form
+    public static function form(Form $form): Form
     {
         return $form
             ->schema([
@@ -63,7 +79,7 @@ class ReviewResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('user_id')
                             ->label(__('Pengulas'))
-                            ->options(User::all()->pluck('name', 'id'))
+                            ->options(User::query()->pluck('full_name', 'id')->toArray())
                             ->searchable()
                             ->required(),
                         Forms\Components\Select::make('wedding_organizer_id')
@@ -77,7 +93,7 @@ class ReviewResource extends Resource
                             ->relationship('package', 'name')
                             ->searchable()
                             ->preload(),
-                    ])->columns(3),
+                    ])->columns(['sm' => 3]),
 
                 Forms\Components\Section::make(__('Rating & Umpan Balik'))
                     ->description(__('Evaluasi pengguna dan komentar detail.'))
@@ -96,7 +112,7 @@ class ReviewResource extends Resource
                         Forms\Components\Textarea::make('comment')
                             ->label(__('Komentar Pengulas'))
                             ->columnSpanFull(),
-                    ])->columns(1),
+                    ])->columns(['sm' => 1]),
             ]);
     }
 
@@ -104,7 +120,7 @@ class ReviewResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('user.name')
+                Tables\Columns\TextColumn::make('user.full_name')
                     ->label(__('Pengulas'))
                     ->sortable()
                     ->searchable(),

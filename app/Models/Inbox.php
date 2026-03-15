@@ -3,11 +3,50 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use App\Models\Message;
 
+/**
+ * @property int $id
+ * @property string|null $title
+ * @property array<array-key, mixed> $user_ids
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ * @property-read mixed $inbox_title
+ * @property-read Collection<int, Message> $messages
+ * @property-read int|null $messages_count
+ * @property-read mixed $other_users
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Inbox newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Inbox newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Inbox onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Inbox query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Inbox whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Inbox whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Inbox whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Inbox whereTitle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Inbox whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Inbox whereUserIds($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Inbox withTrashed(bool $withTrashed = true)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Inbox withoutTrashed()
+ * @method static \App\Models\Inbox|null find(mixed $id, array|string $columns = ['*'])
+ * @method static \Illuminate\Database\Eloquent\Collection<int, \App\Models\Inbox> get(array|string $columns = ['*'])
+ * @property array<array-key, mixed> $userIds
+ * @property \Illuminate\Support\Carbon|null $createdAt
+ * @property \Illuminate\Support\Carbon|null $updatedAt
+ * @property \Illuminate\Support\Carbon|null $deletedAt
+ * @property-read mixed $inboxTitle
+ * @property-read int|null $messagesCount
+ * @property-read bool|null $messagesExists
+ * @property-read mixed $otherUsers
+ * @mixin \Eloquent
+ */
 class Inbox extends Model
 {
     use SoftDeletes;
@@ -16,7 +55,7 @@ class Inbox extends Model
 
     protected $fillable = [
         'title',
-        'user_ids'
+        'user_ids',
     ];
 
     protected function casts(): array
@@ -36,7 +75,7 @@ class Inbox extends Model
 
                 $authId = Auth::id();
                 $userIds = collect($this->user_ids);
-                
+
                 $otherParticipants = $userIds->filter(fn ($id) => $id != $authId);
 
                 if ($otherParticipants->isEmpty()) {
@@ -44,7 +83,7 @@ class Inbox extends Model
                 }
 
                 return $otherParticipants->map(function ($userId) {
-                    return \App\Models\User::find($userId)?->full_name;
+                    return User::query()->find($userId, ['*'])?->full_name;
                 })->values()->filter()->implode(', ') ?: 'Unknown';
             }
         );
@@ -55,15 +94,15 @@ class Inbox extends Model
         return $this->hasMany(Message::class);
     }
 
-    public function latestMessage(): Message | null
+    public function latestMessage(): ?Message
     {
-        return $this->messages()->latest()->first();
+        return $this->messages()->latest()->first(['*']);
     }
 
     public function otherUsers(): Attribute
     {
         return Attribute::make(
-            get: fn () => \App\Models\User::whereIn('id', $this->user_ids)->whereNot('id', Auth::id())->get()
+            get: fn () => User::whereIn('id', $this->user_ids, 'and', false)->where('id', '!=', Auth::id(), 'and')->get(['*'])
         );
     }
 }

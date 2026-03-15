@@ -2,16 +2,16 @@
 
 namespace App\Models\Traits;
 
-use Illuminate\Database\Eloquent\Builder;
 use App\Models\Inbox;
+use Illuminate\Database\Eloquent\Builder;
 
 trait HasFilamentMessages
 {
     /**
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return Builder
      */
     public function allConversations()
     {
-        return Inbox::query()->whereJsonContains('user_ids', $this->id)->orderBy('updated_at', 'desc');
+        return Inbox::query()->whereJsonContains('user_ids', $this->id, 'and', false)->orderBy('updated_at', 'desc');
     }
 }

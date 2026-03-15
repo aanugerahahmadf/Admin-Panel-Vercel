@@ -3,17 +3,17 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Inbox;
+use App\Models\Message;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Inbox;
-use App\Models\Message;
-use spatie\querybuilder\QueryBuilder;
 
 class ChatController extends Controller
 {
     public function getConversations(Request $request)
     {
+        /** @var User $user */
         $user = Auth::user();
 
         if (! $user) {
@@ -24,23 +24,23 @@ class ChatController extends Controller
         }
 
         // Fetch inboxes where the user is a participant
-        $inboxes = Inbox::whereJsonContains('user_ids', $user->id)
+        $inboxes = Inbox::whereJsonContains('user_ids', $user->id, 'and', false)
             ->with(['messages' => function ($query): void {
                 $query->latest()->limit(1);
             }])
-            ->get();
+            ->get(['*']);
 
-        $adminUser = User::role('super_admin')->first();
+        $adminUser = User::role('super_admin')->first(['*']);
         $adminId = $adminUser?->id ?? 1;
         $isAdmin = $user->hasRole('super_admin');
-        $data = $inboxes->map(function ($inbox) use ($user, $adminId, $isAdmin) {
+        $data = $inboxes->map(function (\App\Models\Inbox $inbox) use ($user, $adminId, $isAdmin) {
             $lastMessage = $inbox->messages->first();
             $userIds = $inbox->user_ids ?? [];
             $otherId = collect($userIds)->first(fn ($id) => (int) $id !== (int) $user->id);
-            $otherUser = $otherId ? User::find($otherId) : null;
+            $otherUser = $otherId ? User::find($otherId, ['*']) : null;
 
             $title = $isAdmin
-                ? ($otherUser ? 'Chat dengan ' . ($otherUser->full_name ?: $otherUser->username ?: 'Customer') : $inbox->title ?? 'Chat Support')
+                ? ($otherUser ? 'Chat dengan '.($otherUser->full_name ?: $otherUser->username ?: 'Customer') : $inbox->title ?? 'Chat Support')
                 : 'Chat dengan Admin';
             $otherPayload = [
                 'id' => $otherUser?->id ?? $adminId,
@@ -74,7 +74,7 @@ class ChatController extends Controller
     public function getMessages($inboxId)
     {
         $user = Auth::user();
-        $inbox = Inbox::findOrFail($inboxId);
+        $inbox = Inbox::findOrFail($inboxId, ['*']);
         $userIds = $inbox->user_ids ?? [];
         if (! in_array((int) $user->id, array_map('intval', $userIds))) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
@@ -83,10 +83,11 @@ class ChatController extends Controller
         $messages = Message::where('inbox_id', $inbox->id)
             ->with('sender')
             ->oldest()
-            ->get();
+            ->get(['*']);
 
-        $data = $messages->map(function ($message) use ($user) {
+        $data = $messages->map(function (\App\Models\Message $message) use ($user) {
             $sender = $message->sender;
+
             return [
                 'id' => $message->id,
                 'message' => $message->message,
@@ -113,7 +114,7 @@ class ChatController extends Controller
         ]);
 
         $user = Auth::user();
-        $inbox = Inbox::find($request->inbox_id);
+        $inbox = Inbox::find($request->inbox_id, ['*']);
         if (! $inbox) {
             return response()->json(['success' => false, 'message' => 'Inbox not found'], 404);
         }
@@ -136,8 +137,9 @@ class ChatController extends Controller
 
     public function startConversation(Request $request)
     {
+        /** @var User $user */
         $user = Auth::user();
-        $adminUser = User::role('super_admin')->first();
+        $adminUser = User::role('super_admin')->first(['*']);
         $adminId = $adminUser ? (int) $adminUser->id : 1;
         $isAdmin = $user->hasRole('super_admin');
 
@@ -157,9 +159,9 @@ class ChatController extends Controller
                     'message' => 'Tidak bisa chat dengan diri sendiri.',
                 ], 400);
             }
-            $inbox = Inbox::whereJsonContains('user_ids', (int) $user->id)
-                ->whereJsonContains('user_ids', $withUserId)
-                ->first();
+            $inbox = Inbox::whereJsonContains('user_ids', (int) $user->id, 'and', false)
+                ->whereJsonContains('user_ids', $withUserId, 'and', false)
+                ->first(['*']);
             if (! $inbox) {
                 $inbox = Inbox::create([
                     'user_ids' => [(int) $user->id, $withUserId],
@@ -168,9 +170,9 @@ class ChatController extends Controller
             }
         } else {
             // Customer chat dengan admin/superadmin
-            $inbox = Inbox::whereJsonContains('user_ids', (int) $user->id)
-                ->whereJsonContains('user_ids', $adminId)
-                ->first();
+            $inbox = Inbox::whereJsonContains('user_ids', (int) $user->id, 'and', false)
+                ->whereJsonContains('user_ids', $adminId, 'and', false)
+                ->first(['*']);
             if (! $inbox) {
                 $inbox = Inbox::create([
                     'user_ids' => [(int) $user->id, $adminId],
@@ -192,6 +194,7 @@ class ChatController extends Controller
      */
     public function getCustomersForChat(Request $request)
     {
+        /** @var User $user */
         $user = Auth::user();
         if (! $user->hasRole('super_admin')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
@@ -200,6 +203,7 @@ class ChatController extends Controller
             ->where('id', '!=', $user->id)
             ->orderBy('full_name')
             ->get(['id', 'full_name', 'username', 'email']);
+
         return response()->json([
             'success' => true,
             'data' => $customers->map(fn ($u) => [

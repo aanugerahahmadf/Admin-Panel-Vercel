@@ -2,10 +2,15 @@
 
 namespace App\Filament\Resources\TopupResource\Pages;
 
+use App\Filament\Exports\TopupExporter;
 use App\Filament\Resources\TopupResource;
 use Filament\Actions;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 
+/**
+ * @property-read \App\Filament\Resources\TopupResource $resource
+ */
 class ManageTopups extends ManageRecords
 {
     protected static string $resource = TopupResource::class;
@@ -14,7 +19,7 @@ class ManageTopups extends ManageRecords
     {
         return [
             Actions\ExportAction::make()
-                ->exporter(\App\Filament\Exports\TopupExporter::class)
+                ->exporter(TopupExporter::class)
                 ->label(__('Ekspor Data'))
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('success'),
@@ -22,7 +27,7 @@ class ManageTopups extends ManageRecords
                 ->label(__('Tambah Topup'))
                 ->icon('heroicon-o-plus')
                 ->successNotification(
-                    \Filament\Notifications\Notification::make()
+                    Notification::make()
                         ->success()
                         ->title(__('Topup Ditambahkan'))
                         ->body(__('Data topup baru telah berhasil ditambahkan.'))

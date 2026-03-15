@@ -13,7 +13,6 @@ trait InteractsWithLanguages
 
     public function getLangAttribute()
     {
-        return $this->lang()->first()?->lang ?? 'en';
+        return $this->lang()->first(['*'])?->lang ?? 'en';
     }
 }
-

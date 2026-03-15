@@ -6,11 +6,17 @@ use App\Filament\Resources\ArticleResource\Pages;
 use App\Models\Article;
 use App\Models\User;
 use Filament\Forms;
+use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * @mixin \Eloquent
+ * @property-read \App\Models\Article $record
+ */
 class ArticleResource extends Resource
 {
     protected static ?string $model = Article::class;
@@ -21,8 +27,16 @@ class ArticleResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'title';
 
-    
-    
+    public static function getModelLabel(): string
+    {
+        return __('Artikel');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Artikel');
+    }
+
     public static function getNavigationGroup(): ?string
     {
         return __('Blog & Media');
@@ -35,7 +49,10 @@ class ArticleResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::$model::count();
+        /** @var Builder $query */
+        $query = static::$model::query();
+
+        return (string) $query->count();
     }
 
     public static function getNavigationBadgeColor(): ?string
@@ -53,7 +70,7 @@ class ArticleResource extends Resource
         return ['title', 'slug', 'content'];
     }
 
-    public static function form(\Filament\Forms\Form $form): \Filament\Forms\Form
+    public static function form(Form $form): Form
     {
         return $form
             ->schema([
@@ -67,15 +84,16 @@ class ArticleResource extends Resource
                             ->live(onBlur: true)
                             ->afterStateUpdated(fn (Forms\Set $set, ?string $state) => $set('slug', str($state)->slug())),
                         Forms\Components\TextInput::make('slug')
+                            ->label(__('Slug'))
                             ->required()
-                            ->unique(ignorable: fn ($record) => $record)
+                            ->unique(ignorable: fn (?Article $record) => $record)
                             ->maxLength(255),
                         Forms\Components\Select::make('author_id')
                             ->label(__('Penulis'))
-                            ->options(User::all()->pluck('name', 'id'))
+                            ->options(User::query()->pluck('full_name', 'id')->toArray())
                             ->searchable()
                             ->required(),
-                    ])->columns(2),
+                    ])->columns(['sm' => 2]),
 
                 Forms\Components\Section::make(__('Konten'))
                     ->description(__('Tulis konten utama artikel Anda.'))
@@ -101,8 +119,8 @@ class ArticleResource extends Resource
                                 ->required(),
                             Forms\Components\DateTimePicker::make('published_at')
                                 ->label(__('Tanggal Publikasi')),
-                        ])->columns(1),
-                    ])->columns(2),
+                        ])->columns(['sm' => 1]),
+                    ])->columns(['sm' => 2]),
 
                 Forms\Components\Section::make(__('Video Artikel'))
                     ->description(__('Tambahkan video pendukung untuk artikel ini.'))
@@ -124,9 +142,8 @@ class ArticleResource extends Resource
             ->mobileCards()
             ->mobileCardFeatured('title', 'sky')
             ->columns([
-                Tables\Columns\TextColumn::make('author.name')
+                Tables\Columns\TextColumn::make('author.full_name')
                     ->label(__('Penulis'))
-                    ->numeric()
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('title')

@@ -2,17 +2,28 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Pages\MessagesPage;
 use App\Filament\Resources\OrderResource\Pages;
 use App\Filament\Resources\OrderResource\RelationManagers;
+use App\Models\Inbox;
+use App\Models\Message;
 use App\Models\Order;
 use App\Models\User;
 use Filament\Forms;
+use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
+/**
+ * @mixin \Eloquent
+ * @property-read \App\Models\Order $record
+ */
 class OrderResource extends Resource
+
 {
     protected static ?string $model = Order::class;
 
@@ -22,13 +33,21 @@ class OrderResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'order_number';
 
+    public static function getModelLabel(): string
+    {
+        return __('Pesanan');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Pesanan');
+    }
+
     public static function getGloballySearchableAttributes(): array
     {
         return ['order_number'];
     }
 
-    
-    
     public static function getNavigationGroup(): ?string
     {
         return __('Transaksi');
@@ -41,7 +60,10 @@ class OrderResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::$model::count();
+        /** @var Builder $query */
+        $query = static::$model::query();
+
+        return (string) $query->count();
     }
 
     public static function getNavigationBadgeColor(): ?string
@@ -54,7 +76,7 @@ class OrderResource extends Resource
         return __('Manajemen Pesanan Pelanggan');
     }
 
-    public static function form(\Filament\Forms\Form $form): \Filament\Forms\Form
+    public static function form(Form $form): Form
     {
         return $form
             ->schema([
@@ -63,7 +85,7 @@ class OrderResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('user_id')
                             ->label(__('Pelanggan'))
-                            ->options(User::all()->pluck('name', 'id'))
+                            ->options(User::query()->pluck('full_name', 'id')->toArray())
                             ->searchable()
                             ->required(),
                         Forms\Components\Select::make('package_id')
@@ -72,7 +94,7 @@ class OrderResource extends Resource
                             ->searchable()
                             ->preload()
                             ->required(),
-                    ])->columns(2),
+                    ])->columns(['sm' => 2]),
 
                 Forms\Components\Section::make(__('Informasi Pesanan'))
                     ->description(__('Detail utama mengenai nomor pesanan dan jadwal.'))
@@ -87,7 +109,7 @@ class OrderResource extends Resource
                         Forms\Components\Textarea::make('notes')
                             ->label(__('Catatan'))
                             ->columnSpan('full'),
-                    ])->columns(2),
+                    ])->columns(['sm' => 2]),
 
                 Forms\Components\Section::make(__('Status Keuangan'))
                     ->description(__('Pelacakan harga dan pembayaran untuk transaksi ini.'))
@@ -116,7 +138,7 @@ class OrderResource extends Resource
                             ])
                             ->searchable()
                             ->required(),
-                    ])->columns(3),
+                    ])->columns(['sm' => 3]),
             ]);
     }
 
@@ -124,16 +146,14 @@ class OrderResource extends Resource
     {
         return $table
             ->mobileCards()
-            ->mobileCardFeatured('total_amount', 'rose')
+            ->mobileCardFeatured('total_price', 'rose')
             ->columns([
-                Tables\Columns\TextColumn::make('user.name')
+                Tables\Columns\TextColumn::make('user.full_name')
                     ->label(__('Pelanggan'))
-                    ->numeric()
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('package.name')
                     ->label(__('Paket Layanan'))
-                    ->numeric()
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('order_number')
@@ -148,7 +168,7 @@ class OrderResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->label(__('Status'))
                     ->badge()
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
                         'pending' => __('Tertunda'),
                         'confirmed' => __('Dikonfirmasi'),
                         'cancelled' => __('Dibatalkan'),
@@ -198,16 +218,19 @@ class OrderResource extends Resource
                     ->color('success')
                     ->button()
                     ->url(function (Order $record) {
-                        $authId = \Illuminate\Support\Facades\Auth::id();
+                        $authId = Auth::id();
                         $customerId = $record->user_id;
-                        $adminId = \App\Models\User::role('super_admin')->first()?->id ?? 1;
+                        /** @var User|null $admin */
+                        $admin = User::query()->role('super_admin')->first(['id']);
+                        $adminId = $admin?->id ?? 1;
 
                         $targetId = ($authId == $customerId) ? $adminId : $customerId;
 
-                        $inbox = \App\Models\Inbox::query()
-                            ->whereJsonContains('user_ids', (int) $authId)
-                            ->whereJsonContains('user_ids', (int) $targetId)
-                            ->get()
+                        $inbox = Inbox::query()
+                            ->whereJsonContains('user_ids', (int) $authId, 'and', false)
+                            ->whereJsonContains('user_ids', (int) $targetId, 'and', false)
+                            ->get(['*'])
+                            /** @param Inbox $inbox */
                             ->first(function ($inbox) use ($authId, $targetId) {
                                 $ids = collect($inbox->user_ids)->unique();
 
@@ -215,20 +238,20 @@ class OrderResource extends Resource
                             });
 
                         if (! $inbox) {
-                            $inbox = \App\Models\Inbox::create([
+                            $inbox = Inbox::create([
                                 'user_ids' => collect([(int) $authId, (int) $targetId])->unique()->values()->toArray(),
                                 'title' => __('Diskusi Order #').$record->order_number,
                             ]);
 
-                            \App\Models\Message::create([
+                            Message::create([
                                 'inbox_id' => $inbox->id,
                                 'user_id' => $authId,
-                                'message' => __("Halo, saya ingin mendiskusikan Pesanan #").$record->order_number.".",
+                                'message' => __('Halo, saya ingin mendiskusikan Pesanan #').$record->order_number.'.',
                                 'read_by' => [$authId],
                             ]);
                         }
 
-                        return \App\Filament\Pages\MessagesPage::getUrl(['id' => $inbox->id]);
+                        return MessagesPage::getUrl(['id' => $inbox->id]);
                     }),
                 Tables\Actions\ViewAction::make()
                     ->button()

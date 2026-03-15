@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -11,8 +12,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $link_url
  * @property bool $is_active
  * @property int $sort_order
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Banner newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Banner newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Banner query()
@@ -22,8 +23,19 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Banner whereIsActive($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Banner whereLinkUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Banner whereSortOrder($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Banner whereTitle($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Banner whereUpdatedAt($value)
+ * @method static \App\Models\Banner|null find(mixed $id, array|string $columns = ['*'])
+ * @method static \App\Models\Banner findOrFail(mixed $id, array|string $columns = ['*'])
+ * @method static \App\Models\Banner|null first(array|string $columns = ['*'])
+ * @method static \App\Models\Banner firstOrFail(array|string $columns = ['*'])
+ * @method static \Illuminate\Database\Eloquent\Collection<int, \App\Models\Banner> get(array|string $columns = ['*'])
+ * @property string $imageUrl
+ * @property string|null $linkUrl
+ * @property bool $isActive
+ * @property int $sortOrder
+ * @property \Illuminate\Support\Carbon|null $createdAt
+ * @property \Illuminate\Support\Carbon|null $updatedAt
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|\App\Models\Banner whereTitle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|\App\Models\Banner whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class Banner extends Model

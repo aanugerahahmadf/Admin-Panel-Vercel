@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -11,11 +12,11 @@ use Illuminate\Database\Eloquent\Model;
  * @property int|null $package_id
  * @property int $rating
  * @property string|null $comment
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Package|null $package
- * @property-read \App\Models\User $user
- * @property-read \App\Models\WeddingOrganizer $weddingOrganizer
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Package|null $package
+ * @property-read User $user
+ * @property-read WeddingOrganizer $weddingOrganizer
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Review newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Review newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Review query()
@@ -26,7 +27,17 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Review whereRating($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Review whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Review whereUserId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Review whereWeddingOrganizerId($value)
+ * @method static \App\Models\Review|null find(mixed $id, array|string $columns = ['*'])
+ * @method static \App\Models\Review findOrFail(mixed $id, array|string $columns = ['*'])
+ * @method static \App\Models\Review|null first(array|string $columns = ['*'])
+ * @method static \App\Models\Review firstOrFail(array|string $columns = ['*'])
+ * @method static \Illuminate\Database\Eloquent\Collection<int, \App\Models\Review> get(array|string $columns = ['*'])
+ * @property int $userId
+ * @property int $weddingOrganizerId
+ * @property int|null $packageId
+ * @property \Illuminate\Support\Carbon|null $createdAt
+ * @property \Illuminate\Support\Carbon|null $updatedAt
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|\App\Models\Review whereWeddingOrganizerId($value)
  * @mixin \Eloquent
  */
 class Review extends Model

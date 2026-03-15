@@ -2,15 +2,23 @@
 
 namespace App\Livewire;
 
+use App\Models\UserLanguage;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Notifications\Notification;
+use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 use Joaopaulolndev\FilamentEditProfile\Concerns\HasSort;
 use Livewire\Component;
 use Native\Mobile\Facades\System;
-use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\Auth;
 
+/**
+ * @mixin \Livewire\Component
+ * @property string $selectedLocale
+ */
 class MobileSettingsComponent extends Component implements HasForms
+
 {
     use HasSort;
     use InteractsWithForms;
@@ -34,13 +42,16 @@ class MobileSettingsComponent extends Component implements HasForms
         if (array_key_exists($locale, config('filament-language-switcher.locals'))) {
             app()->setLocale($locale);
             session()->put('locale', $locale);
-            
+
             if (Auth::check()) {
                 $user = Auth::user();
                 if (isset($user->lang)) {
                     $user->update(['lang' => $locale]);
                 } else {
-                    \App\Models\UserLanguage::updateOrCreate(
+                    /** @var Builder $query */
+                    $query = UserLanguage::query();
+
+                    $query->updateOrCreate(
                         ['model_type' => $user->getMorphClass(), 'model_id' => $user->id],
                         ['lang' => $locale]
                     );
@@ -49,12 +60,12 @@ class MobileSettingsComponent extends Component implements HasForms
 
             $this->selectedLocale = $locale;
             $this->dispatch('refresh');
-            
-            \Filament\Notifications\Notification::make()
+
+            Notification::make()
                 ->title(__('Bahasa Berhasil Diubah'))
                 ->success()
                 ->send();
-            
+
             // Redirect to refresh the whole UI state
             $this->redirect(request()->header('Referer'));
         }

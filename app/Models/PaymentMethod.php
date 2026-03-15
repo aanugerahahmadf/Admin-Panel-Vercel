@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -15,11 +15,11 @@ use Illuminate\Support\Facades\Storage;
  * @property string|null $account_number
  * @property string|null $account_holder
  * @property string|null $qris_image
- * @property numeric $fee
+ * @property float $fee
  * @property string|null $instructions
  * @property bool $is_active
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read mixed $icon_url
  * @property-read mixed $qris_image_url
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentMethod newModelQuery()
@@ -38,6 +38,19 @@ use Illuminate\Support\Facades\Storage;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentMethod whereQrisImage($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentMethod whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentMethod whereUpdatedAt($value)
+ * @property string|null $accountNumber
+ * @property string|null $accountHolder
+ * @property string|null $qrisImage
+ * @property bool $isActive
+ * @property \Illuminate\Support\Carbon|null $createdAt
+ * @property \Illuminate\Support\Carbon|null $updatedAt
+ * @property-read mixed $iconUrl
+ * @property-read mixed $qrisImageUrl
+ * @method static \App\Models\PaymentMethod|null find(mixed $id, array|string $columns = ['*'])
+ * @method static \App\Models\PaymentMethod findOrFail(mixed $id, array|string $columns = ['*'])
+ * @method static \Illuminate\Database\Eloquent\Collection<int, \App\Models\PaymentMethod> get(array|string $columns = ['*'])
+ * @method static \App\Models\PaymentMethod|null first(array|string $columns = ['*'])
+ * @method static \App\Models\PaymentMethod firstOrFail(array|string $columns = ['*'])
  * @mixin \Eloquent
  */
 class PaymentMethod extends Model
@@ -68,8 +81,9 @@ class PaymentMethod extends Model
     public function getIconUrlAttribute()
     {
         if ($this->icon) {
-            return asset('storage/' . $this->icon);
+            return asset('storage/'.$this->icon);
         }
+
         return null;
     }
 
@@ -79,8 +93,9 @@ class PaymentMethod extends Model
     public function getQrisImageUrlAttribute()
     {
         if ($this->qris_image) {
-            return asset('storage/' . $this->qris_image);
+            return asset('storage/'.$this->qris_image);
         }
+
         return null;
     }
 }

@@ -2,12 +2,15 @@
 
 namespace App\Filament\Resources\PaymentMethodResource\Pages;
 
-use App\Filament\Resources\PaymentMethodResource;
 use App\Filament\Exports\PaymentMethodExporter;
+use App\Filament\Resources\PaymentMethodResource;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 
+/**
+ * @property-read \App\Filament\Resources\PaymentMethodResource $resource
+ */
 class ManagePaymentMethods extends ManageRecords
 {
     protected static string $resource = PaymentMethodResource::class;

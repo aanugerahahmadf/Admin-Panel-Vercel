@@ -5,9 +5,14 @@ namespace App\Filament\Resources\OrderResource\Pages;
 use App\Filament\Exports\OrderExporter;
 use App\Filament\Resources\OrderResource;
 use Filament\Actions;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 
+/**
+ * @property-read \App\Filament\Resources\OrderResource $resource
+ */
 class ManageOrders extends ManageRecords
+
 {
     protected static string $resource = OrderResource::class;
 
@@ -23,7 +28,7 @@ class ManageOrders extends ManageRecords
                 ->label(__('Tambah Order'))
                 ->icon('heroicon-o-plus')
                 ->successNotification(
-                    \Filament\Notifications\Notification::make()
+                    Notification::make()
                         ->success()
                         ->title(__('Order Ditambahkan'))
                         ->body(__('Order baru telah berhasil ditambahkan.'))

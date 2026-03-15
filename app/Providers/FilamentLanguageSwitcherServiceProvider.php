@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Console\FilamentLanguageSwitcherInstall;
 use Illuminate\Support\ServiceProvider;
 
 class FilamentLanguageSwitcherServiceProvider extends ServiceProvider
@@ -9,7 +10,7 @@ class FilamentLanguageSwitcherServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->commands([
-            \App\Console\FilamentLanguageSwitcherInstall::class,
+            FilamentLanguageSwitcherInstall::class,
         ]);
 
         // Register Config file

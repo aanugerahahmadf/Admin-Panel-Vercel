@@ -2,13 +2,13 @@
 
 namespace App\Filament\Pages;
 
-use Filament\Pages\Page;
-use App\Livewire\PersonalInfoComponent;
-use App\Livewire\UsernameComponent;
-use App\Livewire\MobileSettingsComponent;
-use App\Livewire\EditPasswordComponent;
 use App\Livewire\BrowserSessionsComponent;
 use App\Livewire\DeleteAccountComponent;
+use App\Livewire\EditPasswordComponent;
+use App\Livewire\MobileSettingsComponent;
+use App\Livewire\PersonalInfoComponent;
+use App\Livewire\UsernameComponent;
+use Filament\Pages\Page;
 
 class EditProfilePage extends Page
 {

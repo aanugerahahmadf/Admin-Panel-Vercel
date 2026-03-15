@@ -5,8 +5,12 @@ namespace App\Filament\Resources\CategoryResource\Pages;
 use App\Filament\Exports\CategoryExporter;
 use App\Filament\Resources\CategoryResource;
 use Filament\Actions;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 
+/**
+ * @property-read \App\Filament\Resources\CategoryResource $resource
+ */
 class ManageCategories extends ManageRecords
 {
     protected static string $resource = CategoryResource::class;
@@ -23,7 +27,7 @@ class ManageCategories extends ManageRecords
                 ->label(__('Tambah Kategori'))
                 ->icon('heroicon-o-plus')
                 ->successNotification(
-                    \Filament\Notifications\Notification::make()
+                    Notification::make()
                         ->success()
                         ->title(__('Kategori Ditambahkan'))
                         ->body(__('Kategori baru telah berhasil ditambahkan.'))

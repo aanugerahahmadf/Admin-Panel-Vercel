@@ -3,8 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection;
+use App\Models\User;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * @property int $id
@@ -15,10 +19,13 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property string|null $image_url
  * @property string|null $video_url
  * @property bool $is_published
- * @property \Illuminate\Support\Carbon|null $published_at
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\User $author
+ * @property Carbon|null $published_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read User $author
+ * @property-read string|null $media_video_url
+ * @property-read MediaCollection<int, Media> $media
+ * @property-read int|null $media_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Article newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Article newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Article query()
@@ -31,7 +38,23 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Article wherePublishedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Article whereSlug($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Article whereTitle($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Article whereUpdatedAt($value)
+ * @method static \App\Models\Article|null find(mixed $id, array|string $columns = ['*'])
+ * @method static \App\Models\Article findOrFail(mixed $id, array|string $columns = ['*'])
+ * @method static \App\Models\Article|null first(array|string $columns = ['*'])
+ * @method static \App\Models\Article firstOrFail(array|string $columns = ['*'])
+ * @method static \Illuminate\Database\Eloquent\Collection<int, \App\Models\Article> get(array|string $columns = ['*'])
+ * @property int $authorId
+ * @property string|null $imageUrl
+ * @property string|null $videoUrl
+ * @property bool $isPublished
+ * @property \Illuminate\Support\Carbon|null $publishedAt
+ * @property \Illuminate\Support\Carbon|null $createdAt
+ * @property \Illuminate\Support\Carbon|null $updatedAt
+ * @property-read string|null $mediaVideoUrl
+ * @property-read int|null $mediaCount
+ * @property-read bool|null $mediaExists
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|\App\Models\Article whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|\App\Models\Article whereVideoUrl($value)
  * @mixin \Eloquent
  */
 class Article extends Model implements HasMedia

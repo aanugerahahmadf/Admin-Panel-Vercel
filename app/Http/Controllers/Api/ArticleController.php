@@ -11,7 +11,7 @@ class ArticleController extends Controller
     {
         return response()->json([
             'status' => 'success',
-            'data' => Article::where('is_published', true)->latest()->get(),
+            'data' => Article::where('is_published', true)->latest()->get(['*']),
         ]);
     }
 }

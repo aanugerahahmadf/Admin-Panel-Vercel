@@ -23,24 +23,28 @@ trait CanValidateFiles
     public function validateAudio(string $imagePath): bool
     {
         $extension = strtolower(pathinfo($imagePath, PATHINFO_EXTENSION));
+
         return in_array($extension, $this->validAudioExtensions);
     }
 
     public function validateDocument(string $documentPath): bool
     {
         $extension = strtolower(pathinfo($documentPath, PATHINFO_EXTENSION));
+
         return in_array($extension, $this->validDocumentExtensions);
     }
 
     public function validateImage(string $imagePath): bool
     {
         $extension = strtolower(pathinfo($imagePath, PATHINFO_EXTENSION));
+
         return in_array($extension, $this->validImageExtensions);
     }
 
     public function validateVideo(string $imagePath): bool
     {
         $extension = strtolower(pathinfo($imagePath, PATHINFO_EXTENSION));
+
         return in_array($extension, $this->validVideoExtensions);
     }
 }

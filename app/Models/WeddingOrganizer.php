@@ -2,9 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
+
 
 /**
  * @property int $id
@@ -14,10 +19,10 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property string|null $address
  * @property string|null $latitude
  * @property string|null $longitude
- * @property numeric $rating
+ * @property float $rating
  * @property int $is_verified
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read mixed $business_name
  * @property-read mixed $city
  * @property-read mixed $cover_image_url
@@ -25,11 +30,12 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property-read mixed $logo_url
  * @property-read mixed $phone
  * @property-read mixed $total_reviews
- * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
+ * @property-read string|null $video_url
+ * @property-read MediaCollection<int, Media> $media
  * @property-read int|null $media_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Package> $packages
+ * @property-read Collection<int, Package> $packages
  * @property-read int|null $packages_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Review> $reviews
+ * @property-read Collection<int, Review> $reviews
  * @property-read int|null $reviews_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|WeddingOrganizer newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|WeddingOrganizer newQuery()
@@ -43,8 +49,25 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|WeddingOrganizer whereLongitude($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|WeddingOrganizer whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|WeddingOrganizer whereRating($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|WeddingOrganizer whereSlug($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|WeddingOrganizer whereUpdatedAt($value)
+ * @method static \App\Models\WeddingOrganizer|null find(mixed $id, array $columns = ['*'])
+ * @method static \App\Models\WeddingOrganizer findOrFail(mixed $id, array $columns = ['*'])
+ * @method static \Illuminate\Database\Eloquent\Collection<int, \App\Models\WeddingOrganizer> get(array $columns = ['*'])
+ * @property int $isVerified
+ * @property \Illuminate\Support\Carbon|null $createdAt
+ * @property \Illuminate\Support\Carbon|null $updatedAt
+ * @property-read mixed $businessName
+ * @property-read mixed $coverImageUrl
+ * @property-read mixed $logoUrl
+ * @property-read mixed $totalReviews
+ * @property-read string|null $videoUrl
+ * @property-read int|null $mediaCount
+ * @property-read bool|null $mediaExists
+ * @property-read int|null $packagesCount
+ * @property-read bool|null $packagesExists
+ * @property-read int|null $reviewsCount
+ * @property-read bool|null $reviewsExists
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|\App\Models\WeddingOrganizer whereSlug($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|\App\Models\WeddingOrganizer whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class WeddingOrganizer extends Model implements HasMedia
@@ -84,7 +107,7 @@ class WeddingOrganizer extends Model implements HasMedia
      */
     public static function getOwner()
     {
-        return \App\Models\User::whereHas('roles', function ($query): void {
+        return User::whereHas('roles', function ($query): void {
             $query->where('name', 'super_admin');
         })->first();
     }
@@ -96,7 +119,9 @@ class WeddingOrganizer extends Model implements HasMedia
 
     public function getCityAttribute()
     {
-        if (!$this->address) return 'Unknown';
+        if (! $this->address) {
+            return 'Unknown';
+        }
         $parts = explode(',', $this->address);
 
         return trim(end($parts)) ?: 'Unknown';
@@ -105,12 +130,14 @@ class WeddingOrganizer extends Model implements HasMedia
     public function getPhoneAttribute()
     {
         $owner = self::getOwner();
+
         return $owner?->phone ?? '';
     }
 
     public function getEmailAttribute()
     {
         $owner = self::getOwner();
+
         return $owner?->email ?? '';
     }
 
@@ -133,7 +160,6 @@ class WeddingOrganizer extends Model implements HasMedia
     {
         return $this->reviews_count ?? $this->reviews()->count();
     }
-
 
     public function packages()
     {
