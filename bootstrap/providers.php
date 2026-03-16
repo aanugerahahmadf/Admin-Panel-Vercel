@@ -15,13 +15,13 @@ $providers = [
     FilamentLanguageSwitcherServiceProvider::class,
 ];
 
-// Only register NativeServiceProvider on mobile/native environments
-// Skip on Vercel, Docker, and pure web server environments
-if (! env('VERCEL') && ! env('DOCKER_ENV') && PHP_OS_FAMILY !== 'Windows') {
-    // Additional safety: check if we're not in a standard web server context
-    if (! isset($_SERVER['REQUEST_METHOD']) || defined('NATIVEPHP_RUNNING') || env('NATIVEPHP_RUNNING')) {
-        $providers[] = NativeServiceProvider::class;
-    }
+// Only register NativeServiceProvider in native mobile app environments
+// Skip on web servers (Vercel, Docker, local web server, etc.)
+$isNativeApp = defined('NATIVEPHP_RUNNING') || env('NATIVEPHP_RUNNING') === true;
+$isWebServer = env('VERCEL') || env('DOCKER_ENV') || (isset($_SERVER['REQUEST_METHOD']) && ! $isNativeApp);
+
+if ($isNativeApp && ! $isWebServer) {
+    $providers[] = NativeServiceProvider::class;
 }
 
 return $providers;
