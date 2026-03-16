@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 
 // Conditional NativePHP import
 let nativephpMobile, nativephpHotFile;
-const isVercel = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+const isVercel = !!process.env.VERCEL;
 
 export default defineConfig(async () => {
     const input = [
@@ -38,7 +38,7 @@ export default defineConfig(async () => {
             // Update laravel plugin with hotFile if available
             plugins[0].config.hotFile = nativephpHotFile ? nativephpHotFile() : undefined;
         } catch (e) {
-            console.warn('NativePHP plugins not found, skipping...');
+            // Silently skip NativePHP plugin if not available (expected in non-mobile environments)
         }
     }
 
