@@ -27,7 +27,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-DC76nw2S.js",
+    "file": "assets/app-CVCdWCSQ.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -36,7 +36,7 @@
     ]
   },
   "resources/js/echo.js": {
-    "file": "assets/echo-DQXvqDTx.js",
+    "file": "assets/echo-BXRmpxmk.js",
     "name": "echo",
     "src": "resources/js/echo.js",
     "isEntry": true

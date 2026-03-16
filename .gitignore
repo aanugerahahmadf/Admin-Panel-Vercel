@@ -10,4 +10,4 @@
 /bootstrap/cache/*
 !/bootstrap/cache/.gitignore
 .phpunit.result.cache
-/public/build
+# /public/build (Removed to allow deployment of pre-built assets)
