@@ -257,6 +257,17 @@ class NativeServiceProvider extends ServiceProvider
      */
     public function plugins(): array
     {
+        // Skip plugins on web/server environments (Vercel, Docker, web browsers)
+        // Only load plugins when running as a native mobile app
+        if (env('VERCEL') || env('DOCKER_ENV') || env('APP_ENV') === 'production') {
+            return [];
+        }
+
+        // Only load plugins if the required classes exist (native mobile environment)
+        if (! class_exists(ScreenServiceProvider::class) || ! class_exists(SystemServiceProvider::class)) {
+            return [];
+        }
+
         return [
             ScreenServiceProvider::class,
             SystemServiceProvider::class,
