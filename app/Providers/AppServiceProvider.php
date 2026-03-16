@@ -117,14 +117,17 @@ class AppServiceProvider extends ServiceProvider
                 @mkdir($storagePath, 0777, true);
                 @mkdir($storagePath.'/framework/views', 0777, true);
                 @mkdir($storagePath.'/framework/cache/data', 0777, true);
+                @mkdir($storagePath.'/framework/cache/filament', 0777, true);
                 @mkdir($storagePath.'/framework/sessions', 0777, true);
                 @mkdir($storagePath.'/logs', 0777, true);
+                @mkdir($storagePath.'/livewire-tmp', 0777, true);
             }
             config([
                 'view.compiled' => $storagePath.'/framework/views',
                 'cache.stores.file.path' => $storagePath.'/framework/cache/data',
                 'session.files' => $storagePath.'/framework/sessions',
                 'filament.cache_path' => $storagePath.'/framework/cache/filament',
+                'livewire.temporary_file_upload.directory' => $storagePath.'/livewire-tmp',
             ]);
         }
 
