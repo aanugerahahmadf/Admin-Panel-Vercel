@@ -1,51 +1,17 @@
-# ============================================================
-# .vercelignore — exclude files from UPLOAD to Vercel
-# Vercel will re-install vendor/ and node_modules/ via
-# installCommand and buildCommand in vercel.json
-# ============================================================
-
-# Dependencies — Vercel installs these via installCommand
-node_modules/
-vendor/
-
-# Git
-.git/
-.github/
-
-# IDE / Editor
-.vscode/
-.idea/
-.gemini/
-
-# Laravel dev/test overhead
-tests/
-storage/app/private/
-storage/framework/cache/
-storage/framework/sessions/
-storage/framework/views/
-storage/logs/
-
-# Docker
-docker/
-docker-compose.yml
-Dockerfile
-.dockerignore
-
-# NativePHP — not needed on Vercel
-native/
-nativephp/
-
-# Dev-only / local files
-_ide_helper*
-rector.php
-sail
-logcat_output.txt
-boost.json
-phpunit.xml
-phpstan.neon
-.editorconfig
-.gitattributes
-.phpstorm.meta.php
-require.log
-*.md
-dist/
+# Minimal .vercelignore to ensure assets are uploaded
+.git
+.github
+.vscode
+.idea
+.gemini
+node_modules
+vendor
+tests
+docker
+native
+nativephp
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*
+.env

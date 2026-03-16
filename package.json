@@ -5,8 +5,6 @@
   "scripts": {
     "dev": "vite",
     "vite-build": "vite build",
-    "vercel-install": "echo 'Skipping Install'",
-    "vercel-build": "echo 'Skipping Build'",
     "deploy": "npm run prepare-deploy && vercel deploy --force --prod",
     "prepare-deploy": "npm run vite-build && php artisan filament:assets && php artisan livewire:publish --assets && php artisan config:clear && php artisan route:clear && php artisan view:clear"
   },
