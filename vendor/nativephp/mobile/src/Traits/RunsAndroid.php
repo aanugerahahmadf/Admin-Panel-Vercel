@@ -590,8 +590,7 @@ XML;
             exit(1);
         }
 
-        $avds = array_filter(preg_split('/\R/', trim($listProcess->getOutput())));
-        $this->logToFile('Discovered AVDs: '.implode(', ', $avds));
+        $avds = array_filter(explode("\n", trim($listProcess->getOutput())));
 
         if (empty($avds)) {
             error('No AVDs found.');

@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "vite",
     "vite-build": "vite build",
-    "vercel-build": "echo 'Done'",
+    "vercel-install": "echo 'Skipping Install'",
+    "vercel-build": "echo 'Skipping Build'",
     "deploy": "npm run prepare-deploy && vercel deploy --force --prod",
     "prepare-deploy": "npm run vite-build && php artisan route:cache && php artisan view:cache && php artisan config:cache && php artisan event:cache"
   },

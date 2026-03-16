@@ -6,7 +6,6 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
-        android:largeHeap="true"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -18,8 +17,8 @@
         android:theme="@style/Theme.AndroidPHP"
         tools:targetApi="31">
         <property
-            android:name="android.app.16kb_pages.enabled"
-            android:value="true" />
+                android:name="android.app.16kb_pages.enabled"
+                android:value="true" />
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -30,7 +29,7 @@
                 android:resource="@xml/file_paths" />
         </provider>
         <activity
-            android:name=".ui.MainActivity"
+        android:name=".ui.MainActivity"
             android:configChanges="uiMode|colorMode|orientation|screenSize"
             android:exported="true"
             android:launchMode="singleTop"

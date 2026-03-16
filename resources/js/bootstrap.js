@@ -5,10 +5,13 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
 // 📱 NATIVEPHP MOBILE ADAPTER 📱
 // iOS uses 'php://' protocol which standard axios/fetch don't understand.
-if (window.location.protocol === 'php:') {
+// Skip during build if not in mobile context or on Vercel
+if (window.location.protocol === 'php:' && !import.meta.env.VERCEL) {
     try {
-        // Use the adapter from the vendor directory
-        import('../../vendor/nativephp/mobile/resources/js/phpProtocolAdapter.js').then((module) => {
+        // Use a dynamic path to prevent Vite from trying to resolve it at build time
+        const adapterPath = '../../vendor/nativephp/mobile/resources/js/phpProtocolAdapter.js';
+        
+        import(/* @vite-ignore */ adapterPath).then((module) => {
             const phpAdapter = module.default;
             window.axios.defaults.adapter = phpAdapter;
             
@@ -22,6 +25,8 @@ if (window.location.protocol === 'php:') {
             };
             
             console.log('NativePHP: iOS Protocol Adapter loaded.');
+        }).catch(err => {
+            console.warn('NativePHP: Protocol adapter module not found (Web mode).');
         });
     } catch (e) {
         console.error('NativePHP: Failed to load protocol adapter', e);

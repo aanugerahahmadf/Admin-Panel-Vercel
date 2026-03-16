@@ -244,7 +244,7 @@ trait PreparesBuild
             $this->logToFile('  Installing Composer dependencies'.($excludeDevDependencies ? ' (--no-dev)' : '').'...');
             $this->components->task('Installing Composer dependencies', function () use ($tempDir, $composerArgs) {
                 $result = Process::path($tempDir)
-                    ->timeout(86400)
+                    ->timeout(300)
                     ->run("composer install {$composerArgs}");
 
                 $this->logToFile($result->output());
@@ -258,7 +258,7 @@ trait PreparesBuild
             $this->logToFile('  Optimizing autoloader...');
             $this->components->task('Optimizing autoloader', function () use ($tempDir) {
                 $result = Process::path($tempDir)
-                    ->timeout(86400)
+                    ->timeout(60)
                     ->run('composer dump-autoload --optimize --classmap-authoritative');
 
                 $this->logToFile($result->output());

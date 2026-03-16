@@ -1,8 +1,6 @@
 {
     "version": 2,
     "framework": null,
-    "buildCommand": "echo 'Skipping Build'",
-    "installCommand": "echo 'Skipping Install'",
     "functions": {
         "api/index.php": {
             "runtime": "vercel-php@0.9.0",
@@ -14,6 +12,10 @@
         {
             "src": "/build/(.*)",
             "dest": "/public/build/$1"
+        },
+        {
+            "src": "/(css|js|images|fonts|storage)/(.*)",
+            "dest": "/public/$1/$2"
         },
         {
             "src": "/favicon.ico",
@@ -31,7 +33,6 @@
     "env": {
         "APP_ENV": "production",
         "APP_DEBUG": "false",
-        "APP_KEY": "base64:TGaVaXwhWgjn9akhE4SCSIjGG/cQqvICUQ+PgLA3Bs0=",
         "APP_CONFIG_CACHE": "/tmp/config.php",
         "APP_EVENTS_CACHE": "/tmp/events.php",
         "APP_PACKAGES_CACHE": "/tmp/packages.php",
@@ -40,7 +41,6 @@
         "VIEW_COMPILED_PATH": "/tmp",
         "CACHE_DRIVER": "array",
         "SESSION_DRIVER": "cookie",
-        "LOG_CHANNEL": "stderr",
-        "COMPOSER_FLAGS": "--no-dev --ignore-platform-reqs"
+        "LOG_CHANNEL": "stderr"
     }
 }

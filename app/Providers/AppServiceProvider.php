@@ -124,6 +124,7 @@ class AppServiceProvider extends ServiceProvider
                 'view.compiled' => $storagePath.'/framework/views',
                 'cache.stores.file.path' => $storagePath.'/framework/cache/data',
                 'session.files' => $storagePath.'/framework/sessions',
+                'filament.cache_path' => $storagePath.'/framework/cache/filament',
             ]);
         }
 

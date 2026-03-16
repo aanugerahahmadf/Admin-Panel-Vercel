@@ -1,8 +1,5 @@
 <?php
 
-/** @return array<string, mixed> */
-
-
 return [
     /**
      * An internal flag to indicate if the app is running in the NativePHP

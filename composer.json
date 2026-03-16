@@ -91,7 +91,7 @@
     "scripts": {
         "vercel": [
             "npm install",
-            "npm run build"
+            "npm run vite-build"
         ],
         "setup": [
             "composer install",
@@ -144,7 +144,7 @@
         }
     },
     "config": {
-        "optimize-autoloader": true,
+        "optimize-autoloader": false,
         "preferred-install": "dist",
         "sort-packages": true,
         "allow-plugins": {

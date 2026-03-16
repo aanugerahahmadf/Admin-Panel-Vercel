@@ -570,35 +570,51 @@ class LaravelEnvironment(private val context: Context) {
         val buffer = ByteArray(65536)  // 64KB buffer - optimized for modern flash storage
         val zis = ZipInputStream(BufferedInputStream(inputStream))
 
-        try {
-            var ze: ZipEntry? = zis.nextEntry
-            while (ze != null) {
-                // Skip storage directory - we use persisted_data/storage instead
-                if (ze.name.startsWith("storage/") || ze.name == "storage") {
-                    Log.d(TAG, "⏭️ Skipping storage directory from bundle: ${ze.name}")
-                    zis.closeEntry()
-                    ze = zis.nextEntry
-                    continue
-                }
+        // Phase 1: Read all entries into memory (ZIP must be read sequentially)
+        val directories = mutableListOf<File>()
+        val fileDataList = mutableListOf<Pair<File, ByteArray>>()
 
-                val file = File(destinationDir, ze.name)
-
-                if (ze.isDirectory) {
-                    file.mkdirs()
-                } else {
-                    file.parentFile?.mkdirs()
-                    FileOutputStream(file).use { fos ->
-                        var count: Int
-                        while (zis.read(buffer).also { count = it } != -1) {
-                            fos.write(buffer, 0, count)
-                        }
-                    }
-                }
+        var ze: ZipEntry? = zis.nextEntry
+        while (ze != null) {
+            // Skip storage directory - we use persisted_data/storage instead
+            if (ze.name.startsWith("storage/") || ze.name == "storage") {
+                Log.d(TAG, "⏭️ Skipping storage directory from bundle: ${ze.name}")
                 zis.closeEntry()
                 ze = zis.nextEntry
+                continue
             }
-        } finally {
-            zis.close()
+
+            val file = File(destinationDir, ze.name)
+
+            if (ze.isDirectory) {
+                directories.add(file)
+            } else {
+                // Read file data into memory
+                val outputStream = java.io.ByteArrayOutputStream()
+                var count: Int
+                while (zis.read(buffer).also { count = it } != -1) {
+                    outputStream.write(buffer, 0, count)
+                }
+                fileDataList.add(file to outputStream.toByteArray())
+            }
+            zis.closeEntry()
+            ze = zis.nextEntry
+        }
+        zis.close()
+
+        // Phase 2: Create all directories
+        directories.forEach { it.mkdirs() }
+
+        // Phase 3: Write files in parallel using coroutines
+        runBlocking {
+            fileDataList.map { (file, data) ->
+                async(Dispatchers.IO) {
+                    file.parentFile?.mkdirs()
+                    FileOutputStream(file).use { fos ->
+                        fos.write(data)
+                    }
+                }
+            }.awaitAll()
         }
     }
 
@@ -665,39 +681,19 @@ class LaravelEnvironment(private val context: Context) {
     }
 
     private fun runBaseArtisanCommands() {
-        try {
-            val dbFile = File(appStorageDir, "persisted_data/database/database.sqlite")
-            if (!dbFile.exists()) {
-                Log.d(TAG, "📄 Creating empty SQLite file: ${dbFile.absolutePath}")
-                dbFile.createNewFile()
-            } else {
-                Log.d(TAG, "✅ SQLite file already exists: ${dbFile.absolutePath}")
-            }
-
-            Log.d(TAG, "🚀 Running base Artisan commands...")
-            
-            val commands = listOf(
-                "optimize:clear",
-                "storage:unlink",
-                "storage:link",
-                "migrate --force"
-            )
-
-            for (cmd in commands) {
-                try {
-                    Log.d(TAG, "🏃 Executing: php artisan $cmd")
-                    val result = phpBridge.runArtisanCommand(cmd)
-                    Log.d(TAG, "✅ Command '$cmd' finished")
-                } catch (e: Exception) {
-                    Log.e(TAG, "⚠️ Artisan command '$cmd' failed, but continuing: ${e.message}")
-                }
-            }
-            
-            Log.d(TAG, "✅ All base Artisan commands processed")
-        } catch (e: Exception) {
-            Log.e(TAG, "❌ Critical error in runBaseArtisanCommands", e)
-            // We don't throw here to allow the app to attempt to load even if some setup failed
+        val dbFile = File(appStorageDir, "persisted_data/database/database.sqlite")
+        if (!dbFile.exists()) {
+            Log.d(TAG, "📄 Creating empty SQLite file: ${dbFile.absolutePath}")
+            dbFile.createNewFile()
+        } else {
+            Log.d(TAG, "✅ SQLite file already exists: ${dbFile.absolutePath}")
         }
+
+        File(appStorageDir, "persisted_data/storage/app/public")
+        phpBridge.runArtisanCommand("optimize:clear")
+        phpBridge.runArtisanCommand("storage:unlink")
+        phpBridge.runArtisanCommand("storage:link")
+        phpBridge.runArtisanCommand("migrate --force")
     }
 
     private fun setupDirectories() {

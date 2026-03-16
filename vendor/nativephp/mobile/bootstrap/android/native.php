@@ -10,8 +10,8 @@ $_opcacheInfo = 'unknown';
 if (function_exists('opcache_get_status')) {
     $opcacheStatus = @opcache_get_status(false);
     if ($opcacheStatus) {
-        $_opcacheInfo = 'enabled='.($opcacheStatus['opcache_enabled'] ? 'YES' : 'NO');
-        $_opcacheInfo .= ',cached='.($opcacheStatus['opcache_statistics']['num_cached_scripts'] ?? 0);
+        $_opcacheInfo = 'enabled=' . ($opcacheStatus['opcache_enabled'] ? 'YES' : 'NO');
+        $_opcacheInfo .= ',cached=' . ($opcacheStatus['opcache_statistics']['num_cached_scripts'] ?? 0);
     } else {
         $_opcacheInfo = 'disabled';
     }
@@ -73,8 +73,6 @@ $_timing['kernel'] = microtime(true);
 try {
     $request = Request::capture();
     $_timing['capture'] = microtime(true);
-
-    $app->instance('request', $request);
 
     $kernel->bootstrap();
     $_timing['kernel_bootstrap'] = microtime(true);
